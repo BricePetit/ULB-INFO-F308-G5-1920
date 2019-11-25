@@ -52,7 +52,6 @@ train_dir_names = [d for d in listdir(train_dataset) if not isfile(join(train_da
 test_dir_names = [d for d in listdir(test_dataset) if not isfile(join(test_dataset, d))]
 
 train_file_paths = {}
-test_file_paths = {}
 
 class_num = 0
 for d in train_dir_names:
@@ -60,8 +59,9 @@ for d in train_dir_names:
      train_file_paths[(d, class_num, train_dataset+d+"/")] = train_fnames
      class_num += 1
 
+test_fnames = []
 for d in test_dir_names:
-     test_fnames = [join(test_dataset+d+"/", f) for f in listdir(test_dataset+d+"/") if isfile(join(test_dataset+d+"/", f))]
+     test_fnames += [join(test_dataset+d+"/", f) for f in listdir(test_dataset+d+"/") if isfile(join(test_dataset+d+"/", f))]
 
 #Feature Extraction
 
@@ -72,9 +72,9 @@ for key in train_file_paths:
     category, directory_path = key[1], key[2]
     file_list = train_file_paths[key]
 
-    # read in the file and get its SIFT features
     nb = 300 #len(file_list)
     for fname in file_list[:nb]:
+        # read in the file and get its SIFT features
         np.random.shuffle(file_list)
         fpath = directory_path + fname
         #print(fpath)
@@ -83,7 +83,8 @@ for key in train_file_paths:
         # extract features
         gray = to_gray(fpath)
         gray = cv2.resize(gray, (400, 250))
-        # resize so we're always comparing same-sized images, could also make images larger/smaller to tune for greater accuracy / more speedd
+        # resize so we're always comparing same-sized images, could also make
+        # images larger/smaller to tune for greater accuracy / more speedd
 
         kp, des = gen_sift_features(gray)
 
@@ -110,6 +111,7 @@ for key in train_file_paths:
         training_labels = np.append(training_labels,category)
 
 # Create and fit the SVM
+
 clf = svm.SVC(kernel='linear', C = 1.0, probability=True)
 clf.fit(training_data,training_labels.reshape(training_labels.shape[0],))
 
