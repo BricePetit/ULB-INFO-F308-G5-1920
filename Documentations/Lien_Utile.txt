@@ -1,0 +1,18 @@
+1. Tutoriel potentiellement utile pour le projet :
+    Dans cette playlist, il y a des tutoriels sur les SVM vers le tutoriel 20 jusqu'au 30.
+    https://www.youtube.com/watch?v=mA5nwGoRAOo&list=PLQVvvaa0QuDfKTOs3Keq_kaG2P55YRn5v&index=20
+    Dans cette playlist, il y a des tutoriels avec les rapsberryPi, on peut voir qu'il y a l'utilisation d'un caméra
+    https://www.youtube.com/watch?v=RpseX2ylEuw&list=PLQVvvaa0QuDesV8WWHLLXW_avmTzHmJLv
+
+2. Librairie pour SVM : Skikit-Learn et OpenCV
+    https://scikit-learn.org/stable/modules/svm.html
+    https://scikit-learn.org/stable/
+
+    Façon d'exporter et d'utiliser un modèle
+    https://stackabuse.com/scikit-learn-save-and-restore-models/
+    https://machinelearningmastery.com/save-load-machine-learning-models-python-scikit-learn/
+    https://scikit-learn.org/stable/modules/model_persistence.html
+
+    https://www.datacamp.com/community/tutorials/svm-classification-scikit-learn-python
+
+    https://www.pyimagesearch.com/2017/10/02/deep-learning-on-the-raspberry-pi-with-opencv/
