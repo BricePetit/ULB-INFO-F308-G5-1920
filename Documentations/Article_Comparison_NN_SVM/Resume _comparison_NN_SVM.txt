@@ -1,0 +1,33 @@
+Article : Compariason of support vector machine, neral network and CART algorihms
+            for the land-cover classification using limited training data points.
+Dans l'article, ils utilisent les données suivantes : MODIS (Moderate Resolution Imaging Spectroradiometer)
+SVM donne de bons résultats sur les hyperspectres et des résultats supérieurs comparé aux algorihmes
+de classification traditionnel. SVM possède la capacité pour généraliser avec un nombre assez faible
+d'entrainement. Dans cette étude, ils se sont concentrés sur l'entrainement de 20 à 800 pixels par classe.
+Pour mesurer l'impact de la classification, ils ont créé différentes taille d'échantillion :
+20, 50, 100, 200, 300, 400, 500, 600, 700 et 800 pixels. Ces tailles ont été choisie aléatoirement
+et cette sélection a été lancée 50 fois. Ils ont utilisé SVM-light avec une approche de classification
+de plusieurs classes. Ils ont divisés le problème en deux classes. Ils ont 3 valeurs d'output pour chaque
+pixels. Leur jeu de données est redimensionné entre 0 et 1. RBf (radial basis function) est selectionné
+comme la fonction primaire du noyaux de SVM. Ils ont choisi des intervalles pour les deux paramètres suivants
+C [1:50] et gamma (le symbole chelou) [0.1:10].
+
+Pour le NN (Neural Network), ils ont utilisé un MLP (Multi Layer Perceptron) de 3 couches avec 46 noeuds.
+Pour ajuster les poids, ils ont utilisé un algorithme de backpropagation. Learning rate [0.01:0.20]
+momentum value [0.5:0.9]. Pour l'entrainement, ils ont utilisé l'algo de CART.
+Pour leur premier groupe, ils ont pris au hasard 5% de tous les pixels. Pour le deuxième groupe,
+ils ont prix seulement les pixels avec un sous pixel dominant (>75%), ces pixels sont dit "homogène".
+Pour le dernier groupe, ils ont pris les pixels "hétérogène", les derniers pixels.
+En général, les pixels homogènes devrait avoir une meilleure précision et assurance.
+
+Voir annexe1_resume_NN_VS_SVM.png.
+On peut voir que pour SVM, il y a une précision global de 77% alors que NN a 67% pour les 20 pixels.
+On peut constater que SVM est moins sensible à l'entrainement.
+Lorsque l'on se réfèrre au image de l'article, pour la classe urbain, le taux d'erreur du SVM est de 59%,
+NN est de 77%. Pour les lieux naturels, la précision est de 86% pour SVM et 90% pour NN.
+
+Lorsque les pixels sont homogènes, ils obtiennent, en général, de bons résultats.
+
+Voir Annexe2 et 3 pour avoir les tables qui parlent d'elles-même au niveau des performances.
+
+Je dois encore finir le résumé, je suis à la page 6.
