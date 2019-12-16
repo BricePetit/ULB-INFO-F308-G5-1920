@@ -1,0 +1,48 @@
+TEXTE :
+
+1) Sujet
+
+	Les déchets sont omniprésents dans une société de consommation. Voici quelques graphiques fournit par la banque mondiale. On remarque d’abord une croissance continue des quantité de déchets produits. Ensuite, on peut voir, qu’à l’échelle mondiale, uniquement 20% de la masse total est recyclée ou compostée. Enfin, on remarque que les municipalités peuvent consacré une par conséquente de leur budget pour le traitement des déchets.
+
+	Ainsi, une automatisation du tri des déchets permettrait de recycler de manière plus efficace et dans de plus grandes quantité. En particulier dans les pays ou des dispositifs ne sont pas mit en place pour encourager la population à le faire d’elle-même. On parle également d’une baisse du coût du traitement.
+
+	Il existe déjà de multiple techniques pour trier des déchets spécifiques, tels que les métaux. Notre projet se focalise sur le principe de traitement d’image pour l’identification de la nature des déchets.
+
+2) Les techniques utilisée
+	
+	Dans notre cas, le traitement d’image se résume à un problème de classification en 5 classes : les sacs  jaunes, bleu, orange, blanc et du verre. Il existe de multiple méthodes pour résoudre ce genre de problèmes (k-Nearest Neighbor (KNN), Bayes, Decision Tree …), deux d’entre elles ont été choisie dans le cadre de ce projet :
+- Convolutional Neural Network (CNN)
+- Support Vector Machine (SVM)
+
+2.1) Base de donnée
+
+	La base de données utilisée pour l’entraînement des différents modèles est composée de quelques milliers d’images. Pour augmenter artificiellement la quantité d’informations, les images de l’ensemble de départ subiront des rotations, changement de luminosité et autres déformations.
+
+2.3) Les SVM
+
+	Les SVM peuvent être composés en deux étapes : 
+- l’extraction des caractéristiques des images (SIFT)
+- la division des données en classes distinctes (Hyperplan)
+
+2.3.1) Scale-invariant feature transform (SIFT)
+
+	Le principe de cette technique est de résumé le contenu d’une image via un ensemble de points (donc un ensemble de pixels), jugés les plus important. L’avantage de résumer un objet de cette manière et qu’il pourra être reconnu d’une image à l’autre et ceux, en faisant abstraction du changement d’orientation et d’échelle. On peut en voir un exemple sur cette image.
+
+2.3.2) Hyperplan
+
+	L’entraînement du SVM se base donc sur les donnée extraites via SIFT. Comme la classe de chaque objet (image) est connue pour l’ensemble d’entraînement, on va essayer de les séparer de manière à pouvoir classer de nouveaux objets inconnus.
+	On peut voir que si on considère des objets dans un plan, c’est a dire qu’ils peuvent être résumés par deux paramètres qui permettent d’établir une séparation en deux classes distinctes, cette séparation se fia via une droite. De la même manière, pour un espace à trois dimensions, on utilise un plan pour la séparation des données. Ainsi la nature du séparateur change d’une dimension à l’autre, on l’appelle, de manière générique, l’hyperplan.
+	On peut également voir qu’on peut augmenter la dimension de l’espace dans le cas ou il n’est pas possible de séparer les données.
+
+2.2) Les (CNN)
+
+	Les CNN sont composé de deux parties :
+- La première, est un ensemble de filtres qui s’occupent d’extraire les caractéristiques d’une photo. Les filtres représente des matrices 3x3 qui parcours l’image produisent une image d’outup plus spécifique. Par exemple il est possible de filtrer l’image pour n’en garder que les bords des objets. Ainsi d’un niveau à l’autre les figures reconnues sont de plus en plus complexes (par exemple : dans les premières couches on reconnaît que des droite, puis des formes géométrises et enfin des visages) .
+- La deuxième partie est un réseau de neurones artificiels qui permet de faire la classification finale
+
+	Comme la base de donnée est très petite, alors qu’un CNN demanderait des millions d’images pour être performant, on utilise la méthode de transfert learning. Il s’agit de prendre un modèle déjà entraîné et de le court-circuité au niveau de ses dernière couche de convulsion, pour le ré-entraîner sur de nouvelles données et reconfigurer le réseau de neurones pour le nouveau ensemble de classes.
+
+3) Dispositif pour le printemps des sciences
+
+	Le dispositif sera composée de quelques poubelles étiquetée en fonction de leur classe. Elles seront disposée le long d’une table, au-dessus de laquelle sera installée une caméra.
+	Le modèle le plus performant (SVM ou CNN) sera exporté sur un raspberry pi. La caméra sera actionnée via un bouton et prendra une photo de l’objet disposé sur la table. Après traitement, le  raspberry pi va envoyé un signale à l’un des moteurs, dont chaque poubelle est équipée, pour ouvrir la poubelle dans laquelle il faut jeter le déchet.
