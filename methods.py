@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import cv2
 from sys import stdout
 
-size = (400, 250)
+
+size = (384, 512)
+min_kp = 500
 
 def gen_sift_features(gray_image):
     """Create SIFT model and extract images features
@@ -14,15 +16,15 @@ def gen_sift_features(gray_image):
     kp, desc = sift.detectAndCompute(gray_image, None)
     return kp, desc
 
-def duplicate_kp(kp,des):
+def duplicate_kp(kp,des,min_kp):
     """Duplicate some image keypoints"""
     current_len = len(kp)
-    vectors_needed = 100 - current_len
+    vectors_needed = min_kp - current_len
     repeated_vectors = des[0:vectors_needed, :]
 
-    while len(des) < 100:
+    while len(des) < min_kp:
         des = np.concatenate((des, repeated_vectors), axis=0)
-    des[current_len:100, :] = des[0:vectors_needed, :]
+    des[current_len:min_kp, :] = des[0:vectors_needed, :]
 
     return kp,des
 
@@ -70,10 +72,10 @@ def show(image,gray_image,kp,class_prediction,svm_prediction,file_class):
     plt.pause(3)
     plt.close()
 
-def show_matrix_prediction(class_name,score_matrix,score):
+def show_confusion_matrix(class_name,confusion_matrix,score):
 
     fig, ax = plt.subplots()
-    im = ax.imshow(score_matrix)
+    im = ax.imshow(confusion_matrix)
 
     # We want to show all ticks...
     ax.set_xticks(np.arange(len(class_name)))
@@ -88,10 +90,9 @@ def show_matrix_prediction(class_name,score_matrix,score):
     # Loop over data dimensions and create text annotations.
     for i in range(len(class_name)):
         for j in range(len(class_name)):
-            text = ax.text(j, i, score_matrix[i, j],ha="center", va="center", color="w")
+            text = ax.text(j, i, confusion_matrix[i, j],ha="center", va="center", color="w")
 
-
-    ax.set_title("Prediction Matrix | Prediction score: {0}%".format(score/np.sum(score_matrix)*100))
+    ax.set_title("Confusion Matrix | Prediction score: {0}%".format(round(score*100,2)))
     fig.tight_layout()
     plt.show()
 
@@ -103,6 +104,6 @@ def progressBar(total, progress, category):
     if progress >= 1:
         progress, status = 1, "\r\n"
     block = int(round(barLength * progress))
-    text = "\rCategory {} processing [{}] {:.0f}% {}".format(category,"#" * block + "-" * (barLength - block), round(progress * 100, 0),status)
+    text = "\rProcessing of {} items [{}] {:.0f}% {}".format(str(total)+ " " + category,"#" * block + "-" * (barLength - block), round(progress * 100, 0),status)
     stdout.write(text)
     stdout.flush()

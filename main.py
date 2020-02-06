@@ -3,6 +3,7 @@ from Parser import *
 from training import *
 from testing import *
 from Model import *
+import sys
 #------------------------------------------------------------------------------
 
 p = Parser("dataset-original/")
@@ -15,8 +16,8 @@ training_data,training_labels = train(train_file_paths)
 
 m = ImageClassifierModel()
 #m.load_model('classification-model/classification.pkl')
-#clf = m.createAndfit(training_data,training_labels)
+clf = m.createAndfit(training_data,training_labels)
 clf = m.getClassifier()
 #m.save_model(clf,'classification-model/classification.pkl')
-
+#test_fnames = [(sys.argv[1],sys.argv[2])]
 predict(clf,test_fnames,class_names)

@@ -1,24 +1,29 @@
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, isdir, join
 #Loading data
 
 class Parser(object):
 
-    def __init__(self,path,size = 2/3):
+    def __init__(self,path,size = 0.8):
 
         self.path = path
         self.dir_names = self.getDirectories()
         self.train_files = {}
-        self.test_files = []
+        self.test_files = {}
         self.generate_dataset(size)
 
-    def getFiles(self):
+    def getFiles(self,directory):
 
-        return [f for f in listdir(self.path) if isfile(join(self.path, f))]
+        files_list = []
+        for f in listdir(self.path + directory + "/"):
+            if isfile(join(self.path + directory + "/", f)):
+                files_list.append(join(self.path + directory + "/", f))
+
+        return files_list
 
     def getDirectories(self):
 
-        return [d for d in listdir(self.path) if not isfile(join(self.path, d))]
+        return [d for d in listdir(self.path) if isdir(join(self.path, d))]
 
     def getClassNames(self):
 
@@ -34,11 +39,8 @@ class Parser(object):
 
     def generate_dataset(self,size):
 
-        class_num = 0
-        for d in self.dir_names:
-            fnames = [f for f in listdir(self.path+d+"/") if isfile(join(self.path+d+"/", f))]
-            #names = [join(self.path+d+"/", f) for f in listdir(self.path+d+"/") if isfile(join(self.path+d+"/", f))]
+        for category in self.dir_names:
+            fnames = self.getFiles(category)
             nb = int(len(fnames) * size)
-            self.train_files[(d, class_num, self.path+d+"/")] = fnames[:nb]
-            self.test_files += [(d,join(self.path+d+"/", f)) for f in fnames[nb:]]
-            class_num += 1
+            self.train_files[category] = fnames[:nb]
+            self.test_files[category] = fnames[nb:]
