@@ -1,11 +1,8 @@
+import constants
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 from sys import stdout
-
-
-size = (384, 512)
-min_kp = 500
 
 def gen_sift_features(gray_image):
     """Create SIFT model and extract images features
@@ -36,12 +33,12 @@ def show_gray_image(img):
     """Convenience function to display a typical gray image"""
     return plt.imshow(cv2.cvtColor(img, cmap='gray'))
 
-def to_gray(img,size = False):
+def to_gray(img,resize = False):
     """Convert the image to greyscale and resize it"""
-    if not size:
+    if not resize:
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     else:
-        img = cv2.resize(img, size)
+        img = cv2.resize(img, constants.SIZE)
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 def show_sift_features(gray_image, color_img, kp):
@@ -72,7 +69,7 @@ def show(image,gray_image,kp,class_prediction,svm_prediction,file_class):
     plt.pause(3)
     plt.close()
 
-def show_confusion_matrix(class_name,confusion_matrix,score):
+def show_confusion_matrix(class_name,confusion_matrix,accuracy):
 
     fig, ax = plt.subplots()
     im = ax.imshow(confusion_matrix)
@@ -92,7 +89,7 @@ def show_confusion_matrix(class_name,confusion_matrix,score):
         for j in range(len(class_name)):
             text = ax.text(j, i, confusion_matrix[i, j],ha="center", va="center", color="w")
 
-    ax.set_title("Confusion Matrix | Prediction score: {0}%".format(round(score*100,2)))
+    ax.set_title("Prediction accuracy: {0}%".format(round(accuracy*100,2)))
     fig.tight_layout()
     plt.show()
 

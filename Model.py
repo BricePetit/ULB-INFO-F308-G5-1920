@@ -1,5 +1,7 @@
 from sklearn import svm
+from sklearn.cluster import KMeans
 import joblib
+import numpy as np
 
 class ImageClassifierModel(object):
 
@@ -22,13 +24,13 @@ class ImageClassifierModel(object):
 
         return self.clf
 
-    def save_model(self,clf,path):
+    def save_model(self,path):
 
         """
         Save the SVM for later Use
         """
 
-        joblib.dump(clf, path)
+        joblib.dump(self.clf, path)
 
     def load_model(self,path):
 
@@ -37,3 +39,29 @@ class ImageClassifierModel(object):
         """
 
         self.clf = joblib.load(path)
+
+class ClusterModel(object):
+
+    def __init__(self, n_clusters):
+
+        self.n_clusters = n_clusters
+        self.cluster = None
+
+    def createAndfit(self,all_descriptors):
+
+        self.cluster = KMeans(self.n_clusters)
+        self.cluster.fit(all_descriptors)
+
+    def get_img_clustered_words(self,training_data):
+        return [self.cluster.predict(raw_words) for raw_words in training_data]
+
+    def get_img_bow_hist(self,img_clustered_words):
+        return np.array([np.bincount(clustered_words, minlength=self.n_clusters) for clustered_words in img_clustered_words])
+
+    def save_model(self,path):
+
+        joblib.dump(self.cluster, path)
+
+    def load_model(self,path):
+
+        self.cluster = joblib.load(path)

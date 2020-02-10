@@ -1,6 +1,6 @@
 from os import listdir
 from os.path import isfile, isdir, join
-#Loading data
+from sklearn.model_selection import train_test_split
 
 class Parser(object):
 
@@ -8,6 +8,7 @@ class Parser(object):
 
         self.path = path
         self.dir_names = self.getDirectories()
+        self.files = {}
         self.train_files = {}
         self.test_files = {}
         self.generate_dataset(size)
@@ -41,6 +42,8 @@ class Parser(object):
 
         for category in self.dir_names:
             fnames = self.getFiles(category)
-            nb = int(len(fnames) * size)
-            self.train_files[category] = fnames[:nb]
-            self.test_files[category] = fnames[nb:]
+            self.files[category] = fnames
+
+    def dataset_split(self,size = 0.2):
+        for category in self.dir_names:
+            self.train_files[category], self.test_files[category] = train_test_split(self.files[category], test_size = size)
