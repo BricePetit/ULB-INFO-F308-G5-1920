@@ -25,7 +25,7 @@ def features_extraction(train_fnames, training_data, training_labels):
 
     for category in train_fnames:
         files = train_fnames[category]
-        n = 100#len(files)
+        n = 10#len(files)
         for i in range(n):
             progressBar(n,i+1,category)
             file_name = files[i]
@@ -41,7 +41,7 @@ def features_extraction(train_fnames, training_data, training_labels):
                     training_data.append(des)
                     training_labels.append(category)
 
-def predict(clf,X,y,class_names):
+def predict(clf,X,y,class_names,it,test_fnames):
 
     confusion_matrix = np.zeros((len(class_names),len(class_names)), dtype=int)
     for i in range(len(X)):
@@ -57,9 +57,9 @@ def predict(clf,X,y,class_names):
         category_index = class_names.index(category)
         predict_category_index = class_names.index(class_prediction)
         confusion_matrix[category_index][predict_category_index] += 1
-    #show(img,gray,kp,class_prediction,svm_prediction,category)
+        #show(test_fnames[i],class_prediction,svm_prediction,category)
     accuracy = clf.score(X, y)
-    #show_confusion_matrix(class_names,confusion_matrix,accuracy)
+    show_confusion_matrix(class_names,confusion_matrix,accuracy,it)
     return accuracy
 
 def duplicate_kp(kp,des,min_kp):
@@ -91,17 +91,14 @@ def show_gray_image(img):
 def show_sift_features(gray_image, color_img, kp):
     return plt.imshow(cv2.drawKeypoints(gray_image, kp, color_img.copy()))
 
-def show(image,gray_image,kp,class_prediction,svm_prediction,file_class):
+def show(file_name,class_prediction,svm_prediction,file_class):
 
+    image = cv2.imread(file_name)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     fig = plt.figure()
-    a = fig.add_subplot(1, 3, 1)
-    imgplot = show_rgb_img(cv2.resize(image, size))
+    a = fig.add_subplot(1, 2, 1)
+    imgplot = show_rgb_img(cv2.resize(image,constants.SIZE))
     a.set_title('Image of a {0}'.format(file_class))
-    plt.axis('off')
-
-    a = fig.add_subplot(1, 3, 2)
-    imgplot = show_sift_features(gray_image,image,kp)
-    a.set_title('Sift features')
     plt.axis('off')
 
     x,y = a.axis()[1] + 30 , a.axis()[2]/2 + 10
@@ -116,7 +113,7 @@ def show(image,gray_image,kp,class_prediction,svm_prediction,file_class):
     plt.pause(3)
     plt.close()
 
-def show_confusion_matrix(class_name,confusion_matrix,accuracy):
+def show_confusion_matrix(class_name,confusion_matrix,accuracy,it):
 
     fig, ax = plt.subplots()
     im = ax.imshow(confusion_matrix)
@@ -138,7 +135,8 @@ def show_confusion_matrix(class_name,confusion_matrix,accuracy):
 
     ax.set_title("Prediction accuracy: {0}%".format(round(accuracy*100,2)))
     fig.tight_layout()
-    plt.show()
+    #fig.savefig("Figures/fig"+str(it)+".png")
+    #plt.show()
 
 def progressBar(total, progress, category):
 
