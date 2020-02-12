@@ -4,17 +4,68 @@ import matplotlib.pyplot as plt
 import cv2
 from sys import stdout
 
-def gen_sift_features(gray_image):
-    """Create SIFT model and extract images features
-       kp is the keypoints
-       desc is the SIFT descriptors, they're 128-dimensional vectors
+def gen_sift_features(image,resize = False):
+    """
+    Create SIFT model and extract images features
+    kp is the keypoints
+    desc is the SIFT descriptors, they're 128-dimensional vectors
     """
     sift = cv2.xfeatures2d.SIFT_create()
+
+    if not resize:
+        gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    else:
+        img = cv2.resize(image, constants.SIZE)
+        gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
     kp, desc = sift.detectAndCompute(gray_image, None)
     return kp, desc
 
+def features_extraction(train_fnames, training_data, training_labels):
+
+    for category in train_fnames:
+        files = train_fnames[category]
+        n = 100#len(files)
+        for i in range(n):
+            progressBar(n,i+1,category)
+            file_name = files[i]
+            img = cv2.imread(file_name)
+            if img is not None:
+                kp, des = gen_sift_features(img,resize = True)
+                """
+                En comparant des images de même taille, nous pouvons aussi faire
+                des images plus grandes ou plus petites pour plus de précision
+                ou plus de vitesse.
+                """
+                if len(kp) > 0:
+                    training_data.append(des)
+                    training_labels.append(category)
+
+def predict(clf,X,y,class_names):
+
+    confusion_matrix = np.zeros((len(class_names),len(class_names)), dtype=int)
+    for i in range(len(X)):
+        class_prediction = clf.predict([X[i]])
+        """
+        La probabilité de la classe la plus élevée seulement.
+        """
+        svm_prediction = clf.predict_proba([X[i]])
+        """
+        Les probabilités de chaque classe.
+        """
+        category = y[i]
+        category_index = class_names.index(category)
+        predict_category_index = class_names.index(class_prediction)
+        confusion_matrix[category_index][predict_category_index] += 1
+    #show(img,gray,kp,class_prediction,svm_prediction,category)
+    accuracy = clf.score(X, y)
+    #show_confusion_matrix(class_names,confusion_matrix,accuracy)
+    return accuracy
+
 def duplicate_kp(kp,des,min_kp):
-    """Duplicate some image keypoints"""
+    """
+    Duplicate some image keypoints
+    """
     current_len = len(kp)
     vectors_needed = min_kp - current_len
     repeated_vectors = des[0:vectors_needed, :]
@@ -26,20 +77,16 @@ def duplicate_kp(kp,des,min_kp):
     return kp,des
 
 def show_rgb_img(img):
-    """Convenience function to display a typical color image"""
+    """
+    Convenience function to display a typical color image
+    """
     return plt.imshow(cv2.cvtColor(img, cv2.CV_32S))
 
 def show_gray_image(img):
-    """Convenience function to display a typical gray image"""
+    """
+    Convenience function to display a typical gray image
+    """
     return plt.imshow(cv2.cvtColor(img, cmap='gray'))
-
-def to_gray(img,resize = False):
-    """Convert the image to greyscale and resize it"""
-    if not resize:
-        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    else:
-        img = cv2.resize(img, constants.SIZE)
-        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 def show_sift_features(gray_image, color_img, kp):
     return plt.imshow(cv2.drawKeypoints(gray_image, kp, color_img.copy()))

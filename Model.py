@@ -47,10 +47,13 @@ class ClusterModel(object):
         self.n_clusters = n_clusters
         self.cluster = None
 
-    def createAndfit(self,all_descriptors):
+    def createAndfit(self,training_data):
+
+        all_train_descriptors = [desc for desc_list in training_data for desc in desc_list]
+        all_train_descriptors = np.array(all_train_descriptors)
 
         self.cluster = KMeans(self.n_clusters)
-        self.cluster.fit(all_descriptors)
+        self.cluster.fit(all_train_descriptors)
 
     def get_img_clustered_words(self,training_data):
         return [self.cluster.predict(raw_words) for raw_words in training_data]

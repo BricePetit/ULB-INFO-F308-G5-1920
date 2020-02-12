@@ -1,8 +1,7 @@
 import constants
 from Parser import *
-from training_test import *
-from testing_test import *
 from Model import *
+from methods import *
 import sys
 
 #------------------------------------------------------------------------------
@@ -18,23 +17,31 @@ for it in range(max_iter):
     train_file_paths = p.getTrainingFiles()
     test_fnames = p.getTestingFiles()
 
-    all_descriptors, training_data, training_labels = train(train_file_paths)
+    training_data, training_labels = [],[]
+    features_extraction(train_file_paths, training_data, training_labels)
 
+    print("Cluster model processing")
     cluster_model = ClusterModel(constants.N_CLUSTERS)
-    cluster_model.createAndfit(all_descriptors)
-    #cluster_model.save_model('cluster-model/cluster.pkl')
-    a = cluster_model.get_img_clustered_words(training_data)
-    b = cluster_model.get_img_bow_hist(a)
+    cluster_model.createAndfit(training_data)
+    cluster_model.save_model('cluster-model/cluster4.pkl')
+    img_clustered_words = cluster_model.get_img_clustered_words(training_data)
+    X_train = cluster_model.get_img_bow_hist(img_clustered_words)
+    y_train = np.array(training_labels).transpose()
 
+    print("SVM model processing")
     m = ImageClassifierModel()
     #m.load_model('classification-model/classification.pkl')
-    #m.createAndfit(training_data,training_labels)
-    m.createAndfit(b,training_labels)
+    m.createAndfit(X_train,y_train)
     clf = m.getClassifier()
-    #m.save_model('classification-model/classification.pkl')
+    m.save_model('classification-model/classification4.pkl')
 
+    testing_data, testing_labels =  [],[]
     #test_fnames = [(sys.argv[1],sys.argv[2])]
-    accuracy += predict(clf,test_fnames,class_names,cluster_model)
+    features_extraction(test_fnames, testing_data, testing_labels)
+    img_clustered_words = cluster_model.get_img_clustered_words(testing_data)
+    X_test = cluster_model.get_img_bow_hist(img_clustered_words)
+    y_test = np.array(testing_labels).transpose()
+    accuracy += predict(clf,X_test,y_test,class_names)
 
 average_accuracy = round(accuracy / max_iter * 100,2)
 print("Average accuracy: {}%".format(average_accuracy))
