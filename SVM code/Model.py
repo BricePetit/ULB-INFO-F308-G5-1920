@@ -14,6 +14,11 @@ class ImageClassifierModel(object):
         self.confusion_matrix = None
         self.accuracy = None
 
+    def fill(self):
+        self.classes_labels = self.clf.classes_.tolist()
+        n = len(self.classes_labels)
+        self.confusion_matrix = np.zeros((n,n), dtype=int)
+
     def createAndfit(self,training_data,training_labels,C,kernel,Gamma):
 
         """
@@ -21,9 +26,7 @@ class ImageClassifierModel(object):
         """
         self.clf = svm.SVC(C, kernel, gamma = Gamma)
         self.clf.fit(training_data,training_labels)
-        self.classes_labels = self.clf.classes_.tolist()
-        n = len(self.classes_labels)
-        self.confusion_matrix = np.zeros((n,n), dtype=int)
+        self.fill()
 
     def predict(self,X,y,imgs_path, resize):
 
@@ -101,6 +104,7 @@ class ImageClassifierModel(object):
         """
 
         self.clf = joblib.load(path)
+        self.fill()
 
 class ClusterModel(object):
 
