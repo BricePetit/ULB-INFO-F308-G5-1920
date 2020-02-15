@@ -4,14 +4,14 @@ from sklearn.model_selection import train_test_split
 
 class Parser(object):
 
-    def __init__(self,path,size = 0.8):
+    def __init__(self,path):
 
         self.path = path
         self.dir_names = self.getDirectories()
         self.files = {}
         self.train_files = {}
         self.test_files = {}
-        self.generate_dataset(size)
+        self.generate_dataset()
 
     def getFiles(self,directory):
 
@@ -38,7 +38,7 @@ class Parser(object):
 
         return self.test_files
 
-    def generate_dataset(self,size):
+    def generate_dataset(self):
 
         for category in self.dir_names:
             fnames = self.getFiles(category)
@@ -46,4 +46,7 @@ class Parser(object):
 
     def dataset_split(self,size = 0.2):
         for category in self.dir_names:
-            self.train_files[category], self.test_files[category] = train_test_split(self.files[category], test_size = size)
+            self.train_files[category], self.test_files[category] = \
+                                        train_test_split(self.files[category],
+                                                         test_size = size,
+                                                         random_state = 42)
