@@ -17,7 +17,7 @@ def predict(model, img_path):
 
 if __name__ == '__main__':
 
-	model = load_model('amir_is_gay.model')
+	model = load_model('Model.model')
 	#model.summary()
 	for i in range(10):
 		predict(model,str(i+1)+".jpg")
