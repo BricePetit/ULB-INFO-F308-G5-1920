@@ -1,46 +1,100 @@
 from sklearn import svm
 from sklearn.cluster import KMeans
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import confusion_matrix
 import joblib
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+from sys import stdout
+
+def features_extraction(fnames, data, labels, resize):
+    print("The start of features extraction")
+    for category in fnames:
+        files = fnames[category]
+        n = len(files)
+        for i in range(n):
+            progressBar(n,i+1,category)
+            file_name = files[i]
+            gray_image = cv2.imread(file_name,0)
+            if gray_image is not None:
+                """
+                Create SIFT model and extract images features
+                kp is the keypoints
+                desc is the SIFT descriptors, they're 128-dimensional vectors
+                """
+                sift = cv2.xfeatures2d.SIFT_create()
+                if resize:
+                    """
+                    En comparant des images de même taille, nous pouvons aussi faire
+                    des images plus grandes ou plus petites pour plus de précision
+                    ou plus de vitesse.
+                    """
+                    gray_image = cv2.resize(gray_image, resize, interpolation=cv2.INTER_AREA)
+
+                kp, desc = sift.detectAndCompute(gray_image, None)
+
+                if len(kp) > 0:
+                    data.append(desc)
+                    labels.append(category)
+    print("The end of the extraction")
+
+def progressBar(total, progress, category):
+
+    barLength, status = 20, ""
+    progress = progress / total
+
+    if progress >= 1:
+        progress, status = 1, "\r\n"
+    block = int(round(barLength * progress))
+    text = "\rProcessing of {} items [{}] {:.0f}% {}".format(str(total)+ " " + category,"#" * block + "-" * (barLength - block), round(progress * 100, 0),status)
+    stdout.write(text)
+    stdout.flush()
+
 
 class ImageClassifierModel(object):
 
     def __init__(self):
 
         self.clf = None
-        self.classes_labels = None
-        self.confusion_matrix = None
+        self.class_labels = None
         self.accuracy = None
 
     def fill(self):
-        self.classes_labels = self.clf.classes_.tolist()
-        n = len(self.classes_labels)
-        self.confusion_matrix = np.zeros((n,n), dtype=int)
+        self.class_labels = self.clf.classes_.tolist()
+        n = len(self.class_labels)
 
     def createAndfit(self,training_data,training_labels,C,kernel,Gamma):
 
         """
         Create and fit the SVM
         """
+        """
+        param_grid = {'C' : [1e3, 5e3, 1e4, 5e4, 1e5],
+                      'gamma' : [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 1e-2, 5e-1]}
+        self.clf = GridSearchCV(svm.SVC(kernel = kernel),param_grid, n_jobs = -1)
+        self.clf = self.clf.fit(training_data,training_labels)
+        print(self.clf.best_estimator_)
+        SVC(C=1000.0, break_ties=False, cache_size=200, class_weight=None, coef0=0.0,
+            decision_function_shape='ovr', degree=3, gamma=1e-06, kernel='rbf',
+            max_iter=-1, probability=False, random_state=None, shrinking=True,
+            tol=0.001, verbose=False)
+        """
         self.clf = svm.SVC(C, kernel, gamma = Gamma)
         self.clf.fit(training_data,training_labels)
         self.fill()
 
-    def predict(self,X,y,imgs_path, resize):
+    def predictAndShow(self,X,y,imgs_path, resize):
 
         for x,category,img_path in zip(X,y,imgs_path):
             class_prediction = self.clf.predict([x])
-            """
-            La probabilité de la classe la plus élevée seulement.
-            """
-            i = self.classes_labels.index(category)
-            j = self.classes_labels.index(class_prediction)
-            self.confusion_matrix[i][j] += 1
-            #self.show(img_path,class_prediction,category,resize)
+            self.show(img_path,class_prediction,category,resize)
+
+    def predict(self,X,y):
+        y_pred = self.clf.predict(X)
         self.accuracy = round(self.clf.score(X, y)*100,2)
-        return self.accuracy
+        return y_pred
+
 
     def show(self,file_name,class_prediction,category,size):
 
@@ -59,18 +113,19 @@ class ImageClassifierModel(object):
         plt.pause(3)
         plt.close()
 
-    def show_confusion_matrix(self):
+    def show_confusion_matrix(self,y,y_pred):
 
-        n = len(self.classes_labels)
+        n = len(self.class_labels)
+        confusionMatrix = confusion_matrix(y,y_pred,self.class_labels)
         fig, ax = plt.subplots()
-        im = ax.imshow(self.confusion_matrix)
+        im = ax.imshow(confusionMatrix)
 
         # We want to show all ticks...
         ax.set_xticks(np.arange(n))
         ax.set_yticks(np.arange(n))
         # ... and label them with the respective list entries
-        ax.set_xticklabels(self.classes_labels)
-        ax.set_yticklabels(self.classes_labels)
+        ax.set_xticklabels(self.class_labels)
+        ax.set_yticklabels(self.class_labels)
 
         # Rotate the tick labels and set their alignment.
         plt.setp(ax.get_xticklabels(), rotation=45, ha="right",rotation_mode="anchor")
@@ -78,7 +133,7 @@ class ImageClassifierModel(object):
         # Loop over data dimensions and create text annotations.
         for i in range(n):
             for j in range(n):
-                text = ax.text(j, i, self.confusion_matrix[i, j],ha="center", va="center", color="w")
+                text = ax.text(j, i, confusionMatrix[i, j],ha="center", va="center", color="w")
 
         ax.set_title("Prediction accuracy: {0}%".format(self.accuracy))
         fig.tight_layout()
@@ -117,7 +172,7 @@ class ClusterModel(object):
         all_train_descriptors = [desc for desc_list in training_data for desc in desc_list]
         all_train_descriptors = np.array(all_train_descriptors)
 
-        self.cluster = KMeans(n_clusters)
+        self.cluster = KMeans(n_clusters)#,n_jobs=-1)
         self.cluster.fit(all_train_descriptors)
 
     def get_img_clustered_words(self,training_data):

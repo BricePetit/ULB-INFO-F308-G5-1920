@@ -26,10 +26,6 @@ class Parser(object):
 
         return [d for d in listdir(self.path) if isdir(join(self.path, d))]
 
-    def getClassNames(self):
-
-        return [d for d in self.dir_names]
-
     def getTrainingFiles(self):
 
         return self.train_files
