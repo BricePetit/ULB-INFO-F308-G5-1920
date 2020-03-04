@@ -28,12 +28,18 @@ def train(train_generator):
 	for layer in base_model.layers[:len(base_model.layers)]:
 		layer.trainable = False
 
-	x = base_model.output
-	x = GlobalAveragePooling2D()(x)
-	x = Dense(256,activation='relu')(x)
-	out = Dense(5,activation='softmax')(x)
+	model = Sequential()
+	model.add(base_model)
+	model.add(GlobalAveragePooling2D())
+	model.add(Dense(412,activation='relu'))
+	model.add(Dense(312,activation='relu'))
+	model.add(Dense(212,activation='relu'))
+	model.add(Dense(112,activation='relu'))
+	model.add(Dense(12,activation='relu'))
+	#model.add(Dense(5*4,activation='relu'))
+	model.add(Dense(5,activation='softmax'))
 
-	model = Model(inputs=base_model.input,outputs=out)
+	#model.summary()
 
 	model.compile(optimizer='Adam',loss='categorical_crossentropy',metrics=['accuracy'])
 
@@ -54,50 +60,35 @@ def crossValidation(nb_itr=1, validation_split=0.2):
 	for i in range(nb_itr):
 
 		train_datagen = ImageDataGenerator(preprocessing_function=preprocess_input,validation_split=validation_split)
+		test_datagen = ImageDataGenerator(preprocessing_function=preprocess_input,validation_split=validation_split)
 
-		#folder = "./data_tiny/"
-		folder = "./data/"
-		#folder = "./data_mid/"
-
-		train_generator = train_datagen.flow_from_directory(folder,
-															target_size=(224,224),
-															color_mode='rgb',
-															batch_size=32,
-															class_mode='categorical',
-															shuffle=True,
-															subset='training')
-
-		validation_generator = train_datagen.flow_from_directory(folder,
-																target_size=(224,224),
-																color_mode='rgb',
-																batch_size=32,
-																class_mode='categorical',
-																shuffle=False,
-																subset='validation')
-
+		#folder = "data_tiny"
+		#folder = "data"
+		folder = "data_mid"
+		
+		train_generator,test_generator = split(train_datagen,test_datagen,folder,0.2)
 
 		model = train(train_generator)
 
-		#current_acc = model.evaluate(validation_generator,verbose=1)[1]
+		#current_acc = model.evaluate(test_generator,verbose=1)[1]
 
-		result = model.predict(validation_generator)
-		validation_generator.reset()
+		result = model.predict(test_generator)
 
 		nb_correct = 0
 		confusion_matrix = np.array([[0 for _ in range(5)] for _ in range(5)])
 
-		for x in range(len(validation_generator.classes)):
-			if np.argmax(result[x]) == validation_generator.classes[x]:
+		for x in range(len(test_generator.classes)):
+			if np.argmax(result[x]) == test_generator.classes[x]:
 				nb_correct += 1
 
-			confusion_matrix[validation_generator.classes[x]][np.argmax(result[x])] += 1
+			confusion_matrix[test_generator.classes[x]][np.argmax(result[x])] += 1
 
-		current_acc = nb_correct / len(validation_generator.classes)
+		current_acc = nb_correct / len(test_generator.classes)
+		show_confusion_matrix(confusion_matrix,current_acc,i+1)
 
 
 		print("Accuracy of iteration",i+1,":",round(current_acc*100,2),"%")
 		acc += current_acc
-		show_confusion_matrix(confusion_matrix,current_acc,i+1)
 
 	print("Average accuracy :",round((acc/nb_itr)*100,2),"%")
 
@@ -124,6 +115,54 @@ def show_confusion_matrix(confusion_matrix,accuracy,it):
 	fig.tight_layout()
 	fig.savefig("confusion_matrix/fig"+str(it)+".png")
 
+
+def find_best_hyperparameters():
+	pass
+
+import os
+import random
+import shutil
+
+def split(train_datagen,test_datagen,directory,test_split=0.2):
+	try:
+		shutil.rmtree("datasets")
+	except:
+		pass
+
+	os.mkdir("datasets")
+	os.mkdir("datasets/train")
+	os.mkdir("datasets/test")
+
+	for sub_dir in os.listdir(directory):
+		images = os.listdir(directory + "/" + sub_dir)
+		random.shuffle(images)
+		test_images = images[:round(test_split*len(images))]
+		train_images = images[round(test_split*len(images)):]
+
+		os.mkdir("datasets/test/" + sub_dir)
+
+		for i in test_images:
+			os.link(directory + "/" + sub_dir + "/" + i,"datasets/test/" + sub_dir + "/" + i)
+
+		os.mkdir("datasets/train/" + sub_dir)
+
+		for i in train_images:
+			os.link(directory + "/" + sub_dir + "/" + i,"datasets/train/" + sub_dir + "/" + i)
+
+	train_generator = train_datagen.flow_from_directory("datasets/train/",
+													target_size=(224,224),
+													color_mode='rgb',
+													batch_size=32,
+													class_mode='categorical')
+
+	test_generator = test_datagen.flow_from_directory("datasets/test/",
+													target_size=(224,224),
+													color_mode='rgb',
+													batch_size=32,
+													shuffle=False,
+													class_mode='categorical')
+
+	return train_generator,test_generator
 
 if __name__ == '__main__':
 	crossValidation(5,0.2)
