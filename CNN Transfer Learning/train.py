@@ -50,23 +50,22 @@ def train(train_generator):
 						steps_per_epoch=step_size_train,
 						#epochs=5,
 						epochs=10,
-						verbose=1)
+						#verbose=1
+						verbose=2)
 	return model
 
 
-def crossValidation(nb_itr=1, validation_split=0.2):
+def crossValidation(nb_itr=1,test_split=0.2,fraction_dataset=1):
 	acc = 0
 
 	for i in range(nb_itr):
 
-		train_datagen = ImageDataGenerator(preprocessing_function=preprocess_input,validation_split=validation_split)
-		test_datagen = ImageDataGenerator(preprocessing_function=preprocess_input,validation_split=validation_split)
+		train_datagen = ImageDataGenerator(preprocessing_function=preprocess_input)
+		test_datagen = ImageDataGenerator(preprocessing_function=preprocess_input)
 
-		#folder = "data_tiny"
-		#folder = "data"
-		folder = "data_mid"
+		folder = "data"
 		
-		train_generator,test_generator = split(train_datagen,test_datagen,folder,0.2)
+		train_generator,test_generator = split(train_datagen,test_datagen,folder,test_split,fraction_dataset)
 
 		model = train(train_generator)
 
@@ -116,14 +115,11 @@ def show_confusion_matrix(confusion_matrix,accuracy,it):
 	fig.savefig("confusion_matrix/fig"+str(it)+".png")
 
 
-def find_best_hyperparameters():
-	pass
-
 import os
 import random
 import shutil
 
-def split(train_datagen,test_datagen,directory,test_split=0.2):
+def split(train_datagen,test_datagen,directory,test_split=0.2,fraction_dataset=1):
 	try:
 		shutil.rmtree("datasets")
 	except:
@@ -136,6 +132,7 @@ def split(train_datagen,test_datagen,directory,test_split=0.2):
 	for sub_dir in os.listdir(directory):
 		images = os.listdir(directory + "/" + sub_dir)
 		random.shuffle(images)
+		images = images[:round(fraction_dataset*len(images))]
 		test_images = images[:round(test_split*len(images))]
 		train_images = images[round(test_split*len(images)):]
 
@@ -165,4 +162,4 @@ def split(train_datagen,test_datagen,directory,test_split=0.2):
 	return train_generator,test_generator
 
 if __name__ == '__main__':
-	crossValidation(5,0.2)
+	crossValidation(5,0.2,0.2)
