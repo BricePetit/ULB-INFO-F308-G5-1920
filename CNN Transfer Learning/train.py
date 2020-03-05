@@ -15,13 +15,14 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Model
 from keras.optimizers import Adam
 
-from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 
 
 from keras.models import Sequential
 
+
 def train(train_generator):
+	global nb_layer
 	
 	base_model = VGG19(weights='imagenet',include_top=False)
 
@@ -31,11 +32,16 @@ def train(train_generator):
 	model = Sequential()
 	model.add(base_model)
 	model.add(GlobalAveragePooling2D())
-	model.add(Dense(412,activation='relu'))
-	model.add(Dense(312,activation='relu'))
-	model.add(Dense(212,activation='relu'))
-	model.add(Dense(112,activation='relu'))
-	model.add(Dense(12,activation='relu'))
+
+	d = round((507/(nb_layer+1)))
+
+	for i in range(512-d,5,-d):
+		model.add(Dense(i,activation='relu'))
+	#model.add(Dense(412,activation='relu'))
+	#model.add(Dense(312,activation='relu'))
+	#model.add(Dense(212,activation='relu'))
+	#model.add(Dense(112,activation='relu'))
+	#model.add(Dense(12,activation='relu'))
 	#model.add(Dense(5*4,activation='relu'))
 	model.add(Dense(5,activation='softmax'))
 
@@ -83,6 +89,8 @@ def crossValidation(nb_itr=1,test_split=0.2,fraction_dataset=1):
 			confusion_matrix[test_generator.classes[x]][np.argmax(result[x])] += 1
 
 		current_acc = nb_correct / len(test_generator.classes)
+
+		model.save("models/model" + str(i+1) + ".h5")
 		show_confusion_matrix(confusion_matrix,current_acc,i+1)
 
 
@@ -162,4 +170,10 @@ def split(train_datagen,test_datagen,directory,test_split=0.2,fraction_dataset=1
 	return train_generator,test_generator
 
 if __name__ == '__main__':
-	crossValidation(5,0.2,0.2)
+	nb_layer = 2
+	crossValidation(10,0.2)
+	#for i in range(11):
+		#nb_layer = i
+		#crossValidation(5,0.2,0.3)
+		#print("With",nb_layer,"layers")
+		#print("-"*30)
