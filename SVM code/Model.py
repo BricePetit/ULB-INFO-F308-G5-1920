@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import cv2
 from sys import stdout
 
-def features_extraction(fnames, data, labels, resize):
+def features_extraction(model, fnames, data, labels, imgs_path, resize):
     print("The start of features extraction")
     for category in fnames:
         files = fnames[category]
@@ -23,7 +23,12 @@ def features_extraction(fnames, data, labels, resize):
                 kp is the keypoints
                 desc is the SIFT descriptors, they're 128-dimensional vectors
                 """
-                sift = cv2.xfeatures2d.SIFT_create()
+                if model == "SIFT":
+                    mdl = cv2.xfeatures2d.SIFT_create()
+                elif model == "SURF":
+                    mdl = cv2.xfeatures2d.SURF_create(extended = True, hessianThreshold = 400)
+                elif model == "ORB":
+                    mdl = cv2.ORB_create(1000)
                 if resize:
                     """
                     En comparant des images de même taille, nous pouvons aussi faire
@@ -32,11 +37,12 @@ def features_extraction(fnames, data, labels, resize):
                     """
                     gray_image = cv2.resize(gray_image, resize, interpolation=cv2.INTER_AREA)
 
-                kp, desc = sift.detectAndCompute(gray_image, None)
+                kp, desc = mdl.detectAndCompute(gray_image, None)
 
                 if len(kp) > 0:
                     data.append(desc)
                     labels.append(category)
+                    imgs_path.append(file_name)
     print("The end of the extraction")
 
 def progressBar(total, progress, category):
@@ -57,32 +63,26 @@ class ImageClassifierModel(object):
     def __init__(self):
 
         self.clf = None
-        self.class_labels = None
         self.accuracy = None
-
-    def fill(self):
-        self.class_labels = self.clf.classes_.tolist()
-        n = len(self.class_labels)
 
     def createAndfit(self,training_data,training_labels,C,kernel,Gamma):
 
         """
         Create and fit the SVM
         """
-        """
-        param_grid = {'C' : [1e3, 5e3, 1e4, 5e4, 1e5],
-                      'gamma' : [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 1e-2, 5e-1]}
-        self.clf = GridSearchCV(svm.SVC(kernel = kernel),param_grid, n_jobs = -1)
-        self.clf = self.clf.fit(training_data,training_labels)
-        print(self.clf.best_estimator_)
-        SVC(C=1000.0, break_ties=False, cache_size=200, class_weight=None, coef0=0.0,
-            decision_function_shape='ovr', degree=3, gamma=1e-06, kernel='rbf',
-            max_iter=-1, probability=False, random_state=None, shrinking=True,
-            tol=0.001, verbose=False)
-        """
+
         self.clf = svm.SVC(C, kernel, gamma = Gamma)
         self.clf.fit(training_data,training_labels)
-        self.fill()
+
+    def best_estimator(self,training_data,training_labels):
+        #["linear", "poly", "rbf", "sigmoid"]
+        param_grid = {'kernel' : ["rbf"],
+                      'C' : [1, 1e1, 1e2, 1e3, 5e3, 1e4, 5e4, 1e5],
+                      'gamma' : [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 1e-2, 5e-1]}
+        self.clf = GridSearchCV(svm.SVC(),param_grid, n_jobs = -1)
+        self.clf = self.clf.fit(training_data,training_labels)
+        print(self.clf.best_estimator_)
+
 
     def predictAndShow(self,X,y,imgs_path, resize):
 
@@ -115,8 +115,9 @@ class ImageClassifierModel(object):
 
     def show_confusion_matrix(self,y,y_pred):
 
-        n = len(self.class_labels)
-        confusionMatrix = confusion_matrix(y,y_pred,self.class_labels)
+        class_labels = self.clf.classes_.tolist()
+        n = len(class_labels)
+        confusionMatrix = confusion_matrix(y,y_pred,class_labels)
         fig, ax = plt.subplots()
         im = ax.imshow(confusionMatrix)
 
@@ -124,8 +125,8 @@ class ImageClassifierModel(object):
         ax.set_xticks(np.arange(n))
         ax.set_yticks(np.arange(n))
         # ... and label them with the respective list entries
-        ax.set_xticklabels(self.class_labels)
-        ax.set_yticklabels(self.class_labels)
+        ax.set_xticklabels(class_labels)
+        ax.set_yticklabels(class_labels)
 
         # Rotate the tick labels and set their alignment.
         plt.setp(ax.get_xticklabels(), rotation=45, ha="right",rotation_mode="anchor")
@@ -159,7 +160,6 @@ class ImageClassifierModel(object):
         """
 
         self.clf = joblib.load(path)
-        self.fill()
 
 class ClusterModel(object):
 
@@ -172,7 +172,7 @@ class ClusterModel(object):
         all_train_descriptors = [desc for desc_list in training_data for desc in desc_list]
         all_train_descriptors = np.array(all_train_descriptors)
 
-        self.cluster = KMeans(n_clusters)#,n_jobs=-1)
+        self.cluster = KMeans(n_clusters,n_jobs=-1)
         self.cluster.fit(all_train_descriptors)
 
     def get_img_clustered_words(self,training_data):
