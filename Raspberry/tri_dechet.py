@@ -45,12 +45,11 @@ def takePic():
         camera.close()
 
 def predict(img_path):
-	categories = ["Blanc","Bleu","Jaune","Orange","Verre"]
-    model = load_model('Model.model')
-	img = image.load_img(img_path, target_size=(224, 224))
-	img = np.expand_dims(img, axis=0)
-	result = model.predict([img])
-	return categories[np.argmax(result[0])]
+    categories = ["Blanc","Bleu","Jaune","Orange","Verre"]
+    img = image.load_img(img_path, target_size=(224, 224))
+    img = np.expand_dims(img, axis=0)
+    result = model.predict([img])
+    return categories[np.argmax(result[0])]
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685()
@@ -63,6 +62,8 @@ pwm.set_pwm_freq(60)
 GPIO.setmode(GPIO.BCM)
 button_input = 17 #11 pour GPIO.BOARD car c'est le num 11 phyisquement et 17 logiquement
 GPIO.setup(button_input, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+model = load_model('Model.model')
 
 try:
    while True:
