@@ -1,6 +1,8 @@
 import sys
+
 sys.path.append('../SVM code/')
 
+from PyQt5.QtCore import *
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -11,7 +13,6 @@ from keras.preprocessing import image
 import numpy as np
 
 from Model import *
-import joblib
 
 class CNN:
     def __init__(self):
@@ -93,8 +94,17 @@ class App(QWidget):
         mainLayout = QVBoxLayout()
         grid = QGridLayout()
 
-        titleLabel = QLabel()
-        titleLabel.setPixmap(QPixmap("./bins/title.png").scaled(500,100))
+        titleLayout = QHBoxLayout()
+
+        titleImageLabel = QLabel()
+        titleImageLabel.setPixmap(QPixmap("./bins/title.png").scaled(300, 100, Qt.KeepAspectRatio))
+        titleImageLabel.setAlignment(Qt.AlignCenter)
+        titleTextLabel = QLabel()
+        titleTextLabel.setPixmap(QPixmap("./bins/waste.jpg").scaled(500, 100, Qt.KeepAspectRatio))
+        titleTextLabel.setAlignment(Qt.AlignCenter)
+
+        titleLayout.addWidget(titleImageLabel)
+        titleLayout.addWidget(titleTextLabel)
 
         hbox = QHBoxLayout()
         self.modelComboBox = QComboBox()
@@ -102,6 +112,7 @@ class App(QWidget):
         self.modelComboBox.activated.connect(self.handleCombo)
         self.featuresExtractionComboBox = QComboBox()
         self.featuresExtractionComboBox.addItems(["SIFT", "SURF", "ORB"])
+        self.featuresExtractionComboBox.activated.connect(self.handleCombo)
         executeButton = QPushButton("Execute")
         executeButton.clicked.connect(self.handleExecute)
 
@@ -111,6 +122,8 @@ class App(QWidget):
 
         ImageVbox = QVBoxLayout()
         self.imageLabel = QLabel()
+        self.imageLabel.setFixedSize(224, 224)
+        self.imageLabel.setAlignment(Qt.AlignCenter)
         importButton = QPushButton("Import")
         importButton.clicked.connect(self.openImage)
 
@@ -169,14 +182,14 @@ class App(QWidget):
         grid.addLayout(ImageVbox, 1, 0)
         grid.addLayout(binsHbox, 1, 1)
 
-        mainLayout.addWidget(titleLabel)
+        mainLayout.addLayout(titleLayout)
         mainLayout.addLayout(grid)
         self.setLayout(mainLayout)
 
     def openImage(self):
         fileName, _ = QFileDialog.getOpenFileName(self, 'Choose an image', "", "Image files (*.jpg *.png)")
 
-        pixmap = QPixmap(fileName).scaled(224,224)
+        pixmap = QPixmap(fileName).scaled(self.imageLabel.size(), Qt.KeepAspectRatio)
 
         self.imagePath = fileName
         self.imageLabel.setPixmap(pixmap)
