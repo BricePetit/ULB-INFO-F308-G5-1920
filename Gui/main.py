@@ -1,4 +1,6 @@
 import sys
+sys.path.append('../SVM code/')
+
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -8,6 +10,8 @@ from keras.models import load_model
 from keras.preprocessing import image
 import numpy as np
 
+from Model import *
+import joblib
 
 class CNN:
     def __init__(self):
@@ -20,6 +24,58 @@ class CNN:
         result = self.model.predict([img])
         return self.categories[np.argmax(result[0])]
 
+class SVM:
+    def __init__(self):
+
+        self.SIFT_Cluster = ClusterModel()
+        self.SIFT_Cluster.load_model('../SVM code/cluster-model/1000-SIFT.pkl')
+        self.SURF_Cluster = ClusterModel()
+        self.SURF_Cluster.load_model('../SVM code/cluster-model/1000-SURF.pkl')
+        self.ORB_Cluster = ClusterModel()
+        self.ORB_Cluster.load_model('../SVM code/cluster-model/1000-ORB.pkl')
+
+        self.SVM_SIFT = ImageClassifierModel()
+        self.SVM_SIFT.load_model('../SVM code/classification-model/1000-SVM-SIFT.pkl')
+        self.SVM_SURF = ImageClassifierModel()
+        self.SVM_SURF.load_model('../SVM code/classification-model/1000-SVM-SURF.pkl')
+        self.SVM_ORB = ImageClassifierModel()
+        self.SVM_ORB.load_model('../SVM code/classification-model/1000-SVM-ORB.pkl')
+
+    def predict(self, img_path, model):
+        image_desc = self.features_extraction(img_path, model, resize = (384, 512))
+        if model == "SIFT":
+            cluster_model = self.SIFT_Cluster
+            classifier = self.SVM_SIFT
+        elif model == "SURF":
+            cluster_model = self.SURF_Cluster
+            classifier = self.SVM_SURF
+        elif model == "ORB":
+            cluster_model = self.ORB_Cluster
+            classifier = self.SVM_ORB
+
+        img_clustered_words = cluster_model.get_img_clustered_words([image_desc])
+        X = cluster_model.get_img_bow_hist(img_clustered_words,1000)
+        y_pred = classifier.clf.predict(X)
+        return y_pred[0]
+
+    def features_extraction(self, image_name, model, resize):
+
+        gray_image = cv2.imread(image_name,0)
+        if gray_image is not None:
+            if model == "SIFT":
+                mdl = cv2.xfeatures2d.SIFT_create()
+            elif model == "SURF":
+                mdl = cv2.xfeatures2d.SURF_create(extended = True, hessianThreshold = 400)
+            elif model == "ORB":
+                mdl = cv2.ORB_create(1000)
+            if resize:
+                gray_image = cv2.resize(gray_image, resize, interpolation=cv2.INTER_AREA)
+
+            kp, desc = mdl.detectAndCompute(gray_image, None)
+
+            if len(kp) > 0:
+                return desc
+        return "ERROR"
 
 class App(QWidget):
 
@@ -30,6 +86,7 @@ class App(QWidget):
         self.initGui()
         self.show()
         self.CNN = CNN()
+        self.SVM = SVM()
         self.imagePath = ""
 
     def initGui(self):
@@ -139,7 +196,7 @@ class App(QWidget):
             self.updateBins(self.CNN.predict(self.imagePath))
 
         else:
-            pass
+            self.updateBins(self.SVM.predict(self.imagePath,self.featuresExtractionComboBox.currentText()))
 
     def updateBins(self, prediction):
         self.resetBins()
