@@ -76,7 +76,7 @@ class SVM:
 
             if len(kp) > 0:
                 return desc
-        return "ERROR"
+        raise
 
 class App(QWidget):
 
@@ -84,6 +84,7 @@ class App(QWidget):
         super().__init__()
         self.title = "Waste Sorting"
         self.setWindowTitle(self.title)
+        self.setWindowIcon(QIcon("./bins/icon.png"))
         self.initGui()
         self.show()
         self.CNN = CNN()
@@ -204,12 +205,14 @@ class App(QWidget):
         if self.imagePath == "":
             QMessageBox.about(self, "Warning", "No image selected")
             return
+        try:
+            if self.modelComboBox.currentText() == "CNN":
+                self.updateBins(self.CNN.predict(self.imagePath))
 
-        if self.modelComboBox.currentText() == "CNN":
-            self.updateBins(self.CNN.predict(self.imagePath))
-
-        else:
-            self.updateBins(self.SVM.predict(self.imagePath,self.featuresExtractionComboBox.currentText()))
+            else:
+                self.updateBins(self.SVM.predict(self.imagePath,self.featuresExtractionComboBox.currentText()))
+        except:
+            QMessageBox.about(self, "Warning", "The image couldn't successfully be read")
 
     def updateBins(self, prediction):
         self.resetBins()
