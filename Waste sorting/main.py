@@ -1,49 +1,45 @@
 import sys
-
-sys.path.append('../SVM/')
-
 from PyQt5.QtCore import *
-
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from QLed import QLed
-
 from keras.models import load_model
 from keras.preprocessing import image
 import numpy as np
+from SVM.Model import *
 
-from Model import *
 
 class CNN:
     def __init__(self):
         self.model = load_model("CNN Transfer Learning/Model.model")
         self.categories = ["Blanc", "Bleu", "Jaune", "Orange", "Verre"]
 
-    def predict(self,img_path):
+    def predict(self, img_path):
         img = image.load_img(img_path, target_size=(224, 224))
         img = np.expand_dims(img, axis=0)
         result = self.model.predict([img])
         return self.categories[np.argmax(result[0])]
 
+
 class SVM:
     def __init__(self):
 
         self.SIFT_Cluster = ClusterModel()
-        self.SIFT_Cluster.load_model('../SVM/cluster-model/1000-SIFT.pkl')
+        self.SIFT_Cluster.load_model('SVM/cluster-model/1000-SIFT.pkl')
         self.SURF_Cluster = ClusterModel()
-        self.SURF_Cluster.load_model('../SVM/cluster-model/1000-SURF.pkl')
+        self.SURF_Cluster.load_model('SVM/cluster-model/1000-SURF.pkl')
         self.ORB_Cluster = ClusterModel()
-        self.ORB_Cluster.load_model('../SVM/cluster-model/1000-ORB.pkl')
+        self.ORB_Cluster.load_model('SVM/cluster-model/1000-ORB.pkl')
 
         self.SVM_SIFT = ImageClassifierModel()
-        self.SVM_SIFT.load_model('../SVM/classification-model/1000-SVM-SIFT.pkl')
+        self.SVM_SIFT.load_model('SVM/classification-model/1000-SVM-SIFT.pkl')
         self.SVM_SURF = ImageClassifierModel()
-        self.SVM_SURF.load_model('../SVM/classification-model/1000-SVM-SURF.pkl')
+        self.SVM_SURF.load_model('SVM/classification-model/1000-SVM-SURF.pkl')
         self.SVM_ORB = ImageClassifierModel()
-        self.SVM_ORB.load_model('../SVM/classification-model/1000-SVM-ORB.pkl')
+        self.SVM_ORB.load_model('SVM/classification-model/1000-SVM-ORB.pkl')
 
     def predict(self, img_path, model):
-        image_desc = self.features_extraction(img_path, model, resize = (384, 512))
+        image_desc = self.features_extraction(img_path, model, resize=(384, 512))
         if model == "SIFT":
             cluster_model = self.SIFT_Cluster
             classifier = self.SVM_SIFT
@@ -55,18 +51,18 @@ class SVM:
             classifier = self.SVM_ORB
 
         img_clustered_words = cluster_model.get_img_clustered_words([image_desc])
-        X = cluster_model.get_img_bow_hist(img_clustered_words,1000)
+        X = cluster_model.get_img_bow_hist(img_clustered_words, 1000)
         y_pred = classifier.clf.predict(X)
         return y_pred[0]
 
     def features_extraction(self, image_name, model, resize):
 
-        gray_image = cv2.imread(image_name,0)
+        gray_image = cv2.imread(image_name, 0)
         if gray_image is not None:
             if model == "SIFT":
                 mdl = cv2.xfeatures2d.SIFT_create()
             elif model == "SURF":
-                mdl = cv2.xfeatures2d.SURF_create(extended = True, hessianThreshold = 400)
+                mdl = cv2.xfeatures2d.SURF_create(extended=True, hessianThreshold=400)
             elif model == "ORB":
                 mdl = cv2.ORB_create(1000)
             if resize:
@@ -77,6 +73,7 @@ class SVM:
             if len(kp) > 0:
                 return desc
         raise
+
 
 class App(QWidget):
 
@@ -145,7 +142,7 @@ class App(QWidget):
         glassVbox = QVBoxLayout()
 
         whiteLabel = QLabel()
-        whiteLabel.setPixmap(QPixmap("./bins/blanc.png").scaled(165,165))
+        whiteLabel.setPixmap(QPixmap("./bins/blanc.png").scaled(165, 165))
         blueLabel = QLabel()
         blueLabel.setPixmap(QPixmap("./bins/bleu.png").scaled(165, 165))
         yellowLabel = QLabel()
@@ -162,10 +159,10 @@ class App(QWidget):
         glassVbox.addWidget(glassLabel)
 
         self.bins = {"Blanc": whiteBin,
-                "Bleu": blueBin,
-                "Jaune": yellowBin,
-                "Orange": orangeBin,
-                "Verre": glassBin}
+                     "Bleu": blueBin,
+                     "Jaune": yellowBin,
+                     "Orange": orangeBin,
+                     "Verre": glassBin}
 
         whiteVbox.addWidget(whiteBin)
         blueVbox.addWidget(blueBin)
@@ -210,14 +207,13 @@ class App(QWidget):
                 self.updateBins(self.CNN.predict(self.imagePath))
 
             else:
-                self.updateBins(self.SVM.predict(self.imagePath,self.featuresExtractionComboBox.currentText()))
+                self.updateBins(self.SVM.predict(self.imagePath, self.featuresExtractionComboBox.currentText()))
         except:
             QMessageBox.about(self, "Warning", "The image couldn't successfully be read")
 
     def updateBins(self, prediction):
         self.resetBins()
         self.bins[prediction].value = True
-
 
     def resetBins(self):
         for bin in self.bins:
