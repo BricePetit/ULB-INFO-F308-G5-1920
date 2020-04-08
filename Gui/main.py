@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append('../SVM code/')
+sys.path.append('../SVM/')
 
 from PyQt5.QtCore import *
 
@@ -29,18 +29,18 @@ class SVM:
     def __init__(self):
 
         self.SIFT_Cluster = ClusterModel()
-        self.SIFT_Cluster.load_model('../SVM code/cluster-model/1000-SIFT.pkl')
+        self.SIFT_Cluster.load_model('../SVM/cluster-model/1000-SIFT.pkl')
         self.SURF_Cluster = ClusterModel()
-        self.SURF_Cluster.load_model('../SVM code/cluster-model/1000-SURF.pkl')
+        self.SURF_Cluster.load_model('../SVM/cluster-model/1000-SURF.pkl')
         self.ORB_Cluster = ClusterModel()
-        self.ORB_Cluster.load_model('../SVM code/cluster-model/1000-ORB.pkl')
+        self.ORB_Cluster.load_model('../SVM/cluster-model/1000-ORB.pkl')
 
         self.SVM_SIFT = ImageClassifierModel()
-        self.SVM_SIFT.load_model('../SVM code/classification-model/1000-SVM-SIFT.pkl')
+        self.SVM_SIFT.load_model('../SVM/classification-model/1000-SVM-SIFT.pkl')
         self.SVM_SURF = ImageClassifierModel()
-        self.SVM_SURF.load_model('../SVM code/classification-model/1000-SVM-SURF.pkl')
+        self.SVM_SURF.load_model('../SVM/classification-model/1000-SVM-SURF.pkl')
         self.SVM_ORB = ImageClassifierModel()
-        self.SVM_ORB.load_model('../SVM code/classification-model/1000-SVM-ORB.pkl')
+        self.SVM_ORB.load_model('../SVM/classification-model/1000-SVM-ORB.pkl')
 
     def predict(self, img_path, model):
         image_desc = self.features_extraction(img_path, model, resize = (384, 512))
