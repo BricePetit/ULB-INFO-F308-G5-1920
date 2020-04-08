@@ -1,12 +1,13 @@
 import sys
+
+import numpy as np
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 from QLed import QLed
+from SVM.Model import *
 from keras.models import load_model
 from keras.preprocessing import image
-import numpy as np
-from SVM.Model import *
 
 
 class CNN:
@@ -24,22 +25,16 @@ class CNN:
 class SVM:
     def __init__(self):
 
-        self.SIFT_Cluster = ClusterModel()
-        self.SIFT_Cluster.load_model('SVM/cluster-model/1000-SIFT.pkl')
-        self.SURF_Cluster = ClusterModel()
-        self.SURF_Cluster.load_model('SVM/cluster-model/1000-SURF.pkl')
-        self.ORB_Cluster = ClusterModel()
-        self.ORB_Cluster.load_model('SVM/cluster-model/1000-ORB.pkl')
+        self.SIFT_Cluster = ClusterModel('SVM/cluster-model/1000-SIFT.pkl')
+        self.SURF_Cluster = ClusterModel('SVM/cluster-model/1000-SURF.pkl')
+        self.ORB_Cluster = ClusterModel('SVM/cluster-model/1000-ORB.pkl')
 
-        self.SVM_SIFT = ImageClassifierModel()
-        self.SVM_SIFT.load_model('SVM/classification-model/1000-SVM-SIFT.pkl')
-        self.SVM_SURF = ImageClassifierModel()
-        self.SVM_SURF.load_model('SVM/classification-model/1000-SVM-SURF.pkl')
-        self.SVM_ORB = ImageClassifierModel()
-        self.SVM_ORB.load_model('SVM/classification-model/1000-SVM-ORB.pkl')
+        self.SVM_SIFT = ImageClassifierModel('SVM/classification-model/1000-SVM-SIFT.pkl')
+        self.SVM_SURF = ImageClassifierModel('SVM/classification-model/1000-SVM-SURF.pkl')
+        self.SVM_ORB = ImageClassifierModel('SVM/classification-model/1000-SVM-ORB.pkl')
 
     def predict(self, img_path, model):
-        image_desc = self.features_extraction(img_path, model, resize=(384, 512))
+        image_desc = extract(img_path, model, resize=(384, 512))[1]
         if model == "SIFT":
             cluster_model = self.SIFT_Cluster
             classifier = self.SVM_SIFT
@@ -52,170 +47,146 @@ class SVM:
 
         img_clustered_words = cluster_model.get_img_clustered_words([image_desc])
         X = cluster_model.get_img_bow_hist(img_clustered_words, 1000)
-        y_pred = classifier.clf.predict(X)
+        y_pred = classifier.get_classifier().predict(X)
         return y_pred[0]
-
-    def features_extraction(self, image_name, model, resize):
-
-        gray_image = cv2.imread(image_name, 0)
-        if gray_image is not None:
-            if model == "SIFT":
-                mdl = cv2.xfeatures2d.SIFT_create()
-            elif model == "SURF":
-                mdl = cv2.xfeatures2d.SURF_create(extended=True, hessianThreshold=400)
-            elif model == "ORB":
-                mdl = cv2.ORB_create(1000)
-            if resize:
-                gray_image = cv2.resize(gray_image, resize, interpolation=cv2.INTER_AREA)
-
-            kp, desc = mdl.detectAndCompute(gray_image, None)
-
-            if len(kp) > 0:
-                return desc
-        raise
 
 
 class App(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.title = "Waste Sorting"
-        self.setWindowTitle(self.title)
+
+        self.setWindowTitle("Waste Sorting")
         self.setWindowIcon(QIcon("./bins/icon.png"))
-        self.initGui()
-        self.show()
         self.CNN = CNN()
         self.SVM = SVM()
         self.imagePath = ""
 
-    def initGui(self):
-        mainLayout = QVBoxLayout()
+        self.bins = {}
+        self.imageLabel = QLabel()
+        self.featuresExtractionComboBox = QComboBox()
+        self.modelComboBox = QComboBox()
+        self.init_gui()
+        self.show()
+
+    def init_gui(self):
+
+        main_layout = QVBoxLayout()
         grid = QGridLayout()
 
-        titleLayout = QHBoxLayout()
+        title_layout = self.init_title()
+        bins_hbox = self.init_led_box()
+        options_hbox = self.init_options()
+        image_vbox = self.init_import_image()
 
-        titleImageLabel = QLabel()
-        titleImageLabel.setPixmap(QPixmap("./bins/title.png").scaled(300, 100, Qt.KeepAspectRatio))
-        titleImageLabel.setAlignment(Qt.AlignCenter)
-        titleTextLabel = QLabel()
-        titleTextLabel.setPixmap(QPixmap("./bins/waste.jpg").scaled(500, 100, Qt.KeepAspectRatio))
-        titleTextLabel.setAlignment(Qt.AlignCenter)
+        grid.addLayout(options_hbox, 0, 1)
+        grid.addLayout(image_vbox, 1, 0)
+        grid.addLayout(bins_hbox, 1, 1)
 
-        titleLayout.addWidget(titleImageLabel)
-        titleLayout.addWidget(titleTextLabel)
+        main_layout.addLayout(title_layout)
+        main_layout.addLayout(grid)
+        self.setLayout(main_layout)
 
-        hbox = QHBoxLayout()
-        self.modelComboBox = QComboBox()
-        self.modelComboBox.addItems(["SVM", "CNN"])
-        self.modelComboBox.activated.connect(self.handleCombo)
-        self.featuresExtractionComboBox = QComboBox()
-        self.featuresExtractionComboBox.addItems(["SIFT", "SURF", "ORB"])
-        self.featuresExtractionComboBox.activated.connect(self.handleCombo)
-        executeButton = QPushButton("Execute")
-        executeButton.clicked.connect(self.handleExecute)
+    def init_import_image(self):
 
-        hbox.addWidget(self.modelComboBox)
-        hbox.addWidget(self.featuresExtractionComboBox)
-        hbox.addWidget(executeButton)
-
-        ImageVbox = QVBoxLayout()
-        self.imageLabel = QLabel()
+        image_vbox = QVBoxLayout()
         self.imageLabel.setFixedSize(224, 224)
         self.imageLabel.setAlignment(Qt.AlignCenter)
-        importButton = QPushButton("Import")
-        importButton.clicked.connect(self.openImage)
+        import_button = QPushButton("Import")
+        import_button.clicked.connect(self.open_image)
+        image_vbox.addWidget(self.imageLabel)
+        image_vbox.addWidget(import_button)
 
-        ImageVbox.addWidget(self.imageLabel)
-        ImageVbox.addWidget(importButton)
+        return image_vbox
 
-        binsHbox = QHBoxLayout()
-        whiteBin = QLed(onColour=QLed.Grey, offColour=QLed.Red)
-        blueBin = QLed(onColour=QLed.Blue, offColour=QLed.Red)
-        yellowBin = QLed(onColour=QLed.Yellow, offColour=QLed.Red)
-        orangeBin = QLed(onColour=QLed.Orange, offColour=QLed.Red)
-        glassBin = QLed(onColour=QLed.Green, offColour=QLed.Red)
+    def init_options(self):
 
-        whiteVbox = QVBoxLayout()
-        blueVbox = QVBoxLayout()
-        yellowVbox = QVBoxLayout()
-        orangeVbox = QVBoxLayout()
-        glassVbox = QVBoxLayout()
+        options_hbox = QHBoxLayout()
+        self.modelComboBox.addItems(["SVM", "CNN"])
+        self.modelComboBox.activated.connect(self.handle_combo)
+        self.featuresExtractionComboBox.addItems(["SIFT", "SURF", "ORB"])
+        self.featuresExtractionComboBox.activated.connect(self.handle_combo)
+        execute_button = QPushButton("Execute")
+        execute_button.clicked.connect(self.handle_execute)
+        options_hbox.addWidget(self.modelComboBox)
+        options_hbox.addWidget(self.featuresExtractionComboBox)
+        options_hbox.addWidget(execute_button)
 
-        whiteLabel = QLabel()
-        whiteLabel.setPixmap(QPixmap("./bins/blanc.png").scaled(165, 165))
-        blueLabel = QLabel()
-        blueLabel.setPixmap(QPixmap("./bins/bleu.png").scaled(165, 165))
-        yellowLabel = QLabel()
-        yellowLabel.setPixmap(QPixmap("./bins/jaune.png").scaled(165, 165))
-        orangeLabel = QLabel()
-        orangeLabel.setPixmap(QPixmap("./bins/orange.png").scaled(165, 165))
-        glassLabel = QLabel()
-        glassLabel.setPixmap(QPixmap("./bins/verre.jpg").scaled(165, 165))
+        return options_hbox
 
-        whiteVbox.addWidget(whiteLabel)
-        blueVbox.addWidget(blueLabel)
-        yellowVbox.addWidget(yellowLabel)
-        orangeVbox.addWidget(orangeLabel)
-        glassVbox.addWidget(glassLabel)
+    def init_title(self):
 
-        self.bins = {"Blanc": whiteBin,
-                     "Bleu": blueBin,
-                     "Jaune": yellowBin,
-                     "Orange": orangeBin,
-                     "Verre": glassBin}
+        title_layout = QHBoxLayout()
+        title_image_label = QLabel()
+        title_image_label.setPixmap(QPixmap("./bins/title.png").scaled(300, 100, Qt.KeepAspectRatio))
+        title_image_label.setAlignment(Qt.AlignCenter)
+        title_text_label = QLabel()
+        title_text_label.setPixmap(QPixmap("./bins/waste.jpg").scaled(500, 100, Qt.KeepAspectRatio))
+        title_text_label.setAlignment(Qt.AlignCenter)
+        title_layout.addWidget(title_image_label)
+        title_layout.addWidget(title_text_label)
 
-        whiteVbox.addWidget(whiteBin)
-        blueVbox.addWidget(blueBin)
-        yellowVbox.addWidget(yellowBin)
-        orangeVbox.addWidget(orangeBin)
-        glassVbox.addWidget(glassBin)
+        return title_layout
 
-        binsHbox.addLayout(whiteVbox)
-        binsHbox.addLayout(blueVbox)
-        binsHbox.addLayout(yellowVbox)
-        binsHbox.addLayout(orangeVbox)
-        binsHbox.addLayout(glassVbox)
+    def init_led_box(self):
 
-        grid.addLayout(hbox, 0, 1)
-        grid.addLayout(ImageVbox, 1, 0)
-        grid.addLayout(binsHbox, 1, 1)
+        bins_hbox = QHBoxLayout()
 
-        mainLayout.addLayout(titleLayout)
-        mainLayout.addLayout(grid)
-        self.setLayout(mainLayout)
+        white_bin = QLed(onColour=QLed.Grey, offColour=QLed.Red)
+        blue_bin = QLed(onColour=QLed.Blue, offColour=QLed.Red)
+        yellow_bin = QLed(onColour=QLed.Yellow, offColour=QLed.Red)
+        orange_bin = QLed(onColour=QLed.Orange, offColour=QLed.Red)
+        glass_bin = QLed(onColour=QLed.Green, offColour=QLed.Red)
 
-    def openImage(self):
-        fileName, _ = QFileDialog.getOpenFileName(self, 'Choose an image', "", "Image files (*.jpg *.png)")
+        self.bins = {"Blanc": white_bin, "Bleu": blue_bin, "Jaune": yellow_bin, "Orange": orange_bin,
+                     "Verre": glass_bin}
 
-        pixmap = QPixmap(fileName).scaled(self.imageLabel.size(), Qt.KeepAspectRatio)
+        bins_list = [white_bin, blue_bin, yellow_bin, orange_bin, glass_bin]
+        bins_images = ["blanc", "bleu", "jaune", "orange", "verre"]
 
-        self.imagePath = fileName
+        for i in range(5):
+            label = QLabel()
+            label.setPixmap(QPixmap("./bins/{}.png".format(bins_images[i])).scaled(165, 165))
+            vbox = QVBoxLayout()
+            vbox.addWidget(label)
+            vbox.addWidget(bins_list[i])
+            bins_hbox.addLayout(vbox)
+
+        return bins_hbox
+
+    def open_image(self):
+
+        file_name, _ = QFileDialog.getOpenFileName(self, 'Choose an image', "", "Image files (*.jpg *.png)")
+
+        pixmap = QPixmap(file_name).scaled(self.imageLabel.size(), Qt.KeepAspectRatio)
+
+        self.imagePath = file_name
         self.imageLabel.setPixmap(pixmap)
-        self.resetBins()
+        self.reset_bins()
 
-    def handleCombo(self):
-        self.resetBins()
+    def handle_combo(self):
+        self.reset_bins()
         self.featuresExtractionComboBox.setEnabled(self.modelComboBox.currentText() == "SVM")
 
-    def handleExecute(self):
-        self.resetBins()
+    def handle_execute(self):
+        self.reset_bins()
         if self.imagePath == "":
             QMessageBox.about(self, "Warning", "No image selected")
             return
         try:
             if self.modelComboBox.currentText() == "CNN":
-                self.updateBins(self.CNN.predict(self.imagePath))
+                self.update_bins(self.CNN.predict(self.imagePath))
 
             else:
-                self.updateBins(self.SVM.predict(self.imagePath, self.featuresExtractionComboBox.currentText()))
+                self.update_bins(self.SVM.predict(self.imagePath, self.featuresExtractionComboBox.currentText()))
         except:
             QMessageBox.about(self, "Warning", "The image couldn't successfully be read")
 
-    def updateBins(self, prediction):
-        self.resetBins()
+    def update_bins(self, prediction):
+        self.reset_bins()
         self.bins[prediction].value = True
 
-    def resetBins(self):
+    def reset_bins(self):
         for bin in self.bins:
             self.bins[bin].value = False
 

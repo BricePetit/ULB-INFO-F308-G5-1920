@@ -10,6 +10,23 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import GridSearchCV
 
 
+def extract(image_name, model, resize):
+    gray_image = cv2.imread(image_name, 0)
+    if gray_image is not None:
+        if model == "SIFT":
+            mdl = cv2.xfeatures2d.SIFT_create()
+        elif model == "SURF":
+            mdl = cv2.xfeatures2d.SURF_create(extended=True, hessianThreshold=400)
+        elif model == "ORB":
+            mdl = cv2.ORB_create(1000)
+        if resize:
+            gray_image = cv2.resize(gray_image, resize, interpolation=cv2.INTER_AREA)
+
+        kp, desc = mdl.detectAndCompute(gray_image, None)
+        return kp, desc
+    raise
+
+
 def features_extraction(model, files, data, labels, files_path, resize):
     print("The start of features extraction")
     for category in files:
@@ -18,33 +35,11 @@ def features_extraction(model, files, data, labels, files_path, resize):
         for i in range(n):
             progress_bar(n, i + 1, category)
             file_name = files[i]
-            gray_image = cv2.imread(file_name, 0)
-            if gray_image is not None:
-                """
-                Create SIFT model and extract images features
-                kp is the keypoints
-                desc is the SIFT descriptors, they're 128-dimensional vectors
-                """
-                if model == "SIFT":
-                    mdl = cv2.xfeatures2d.SIFT_create()
-                elif model == "SURF":
-                    mdl = cv2.xfeatures2d.SURF_create(extended=True, hessianThreshold=400)
-                elif model == "ORB":
-                    mdl = cv2.ORB_create(1000)
-                if resize:
-                    """
-                    En comparant des images de même taille, nous pouvons aussi faire
-                    des images plus grandes ou plus petites pour plus de précision
-                    ou plus de vitesse.
-                    """
-                    gray_image = cv2.resize(gray_image, resize, interpolation=cv2.INTER_AREA)
-
-                kp, desc = mdl.detectAndCompute(gray_image, None)
-
-                if len(kp) > 0:
-                    data.append(desc)
-                    labels.append(category)
-                    files_path.append(file_name)
+            kp, desc = extract(file_name, model, resize)
+            if len(kp) > 0:
+                data.append(desc)
+                labels.append(category)
+                files_path.append(file_name)
     print("The end of the extraction")
 
 
@@ -64,10 +59,12 @@ def progress_bar(total, progress, category):
 
 class ImageClassifierModel(object):
 
-    def __init__(self):
+    def __init__(self, path=None):
 
         self.clf = None
         self.accuracy = None
+        if path:
+            self.load_model(path)
 
     def create_and_fit(self, training_data, training_labels, c, kernel, gamma):
 
@@ -119,24 +116,20 @@ class ImageClassifierModel(object):
 
         class_labels = self.clf.classes_.tolist()
         n = len(class_labels)
-        confusionMatrix = confusion_matrix(y, y_pred, class_labels)
+        matrix = confusion_matrix(y, y_pred, class_labels)
         fig, ax = plt.subplots()
-        ax.imshow(confusionMatrix)
+        ax.imshow(matrix)
 
-        # We want to show all ticks...
         ax.set_xticks(np.arange(n))
         ax.set_yticks(np.arange(n))
-        # ... and label them with the respective list entries
         ax.set_xticklabels(class_labels)
         ax.set_yticklabels(class_labels)
 
-        # Rotate the tick labels and set their alignment.
         plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
-        # Loop over dataset dimensions and create text annotations.
         for i in range(n):
             for j in range(n):
-                ax.text(j, i, confusionMatrix[i, j], ha="center", va="center", color="w")
+                ax.text(j, i, matrix[i, j], ha="center", va="center", color="w")
 
         ax.set_title("Prediction accuracy: {0}%".format(self.accuracy))
         fig.tight_layout()
@@ -166,8 +159,10 @@ class ImageClassifierModel(object):
 
 class ClusterModel(object):
 
-    def __init__(self):
+    def __init__(self, path=None):
         self.cluster = None
+        if path:
+            self.load_model(path)
 
     def create_and_fit(self, training_data, n_clusters):
         all_train_descriptors = [desc for desc_list in training_data for desc in desc_list]
