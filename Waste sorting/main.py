@@ -25,30 +25,22 @@ class CNN:
 class SVM:
     def __init__(self):
 
-        self.SIFT_Cluster = ClusterModel('SVM/cluster-model/1000-SIFT.pkl')
-        self.SURF_Cluster = ClusterModel('SVM/cluster-model/1000-SURF.pkl')
-        self.ORB_Cluster = ClusterModel('SVM/cluster-model/1000-ORB.pkl')
+        self.SVM_SIFT = ImageClassifierModel("SIFT", 1000)
+        self.SVM_SURF = ImageClassifierModel("SURF", 1000)
+        self.SVM_ORB = ImageClassifierModel("ORB", 1000)
 
-        self.SVM_SIFT = ImageClassifierModel('SVM/classification-model/1000-SVM-SIFT.pkl')
-        self.SVM_SURF = ImageClassifierModel('SVM/classification-model/1000-SVM-SURF.pkl')
-        self.SVM_ORB = ImageClassifierModel('SVM/classification-model/1000-SVM-ORB.pkl')
+        self.SVM_SIFT.load()
+        self.SVM_SURF.load()
+        self.SVM_ORB.load()
 
     def predict(self, img_path, model):
-        image_desc = extract(img_path, model, resize=(384, 512))[1]
-        if model == "SIFT":
-            cluster_model = self.SIFT_Cluster
-            classifier = self.SVM_SIFT
-        elif model == "SURF":
-            cluster_model = self.SURF_Cluster
-            classifier = self.SVM_SURF
-        elif model == "ORB":
-            cluster_model = self.ORB_Cluster
-            classifier = self.SVM_ORB
 
-        img_clustered_words = cluster_model.get_img_clustered_words([image_desc])
-        X = cluster_model.get_img_bow_hist(img_clustered_words, 1000)
-        y_pred = classifier.get_classifier().predict(X)
-        return y_pred[0]
+        if model == "SIFT":
+            return self.SVM_SIFT.predict(img_path)
+        elif model == "SURF":
+            return self.SVM_SURF.predict(img_path)
+        elif model == "ORB":
+            return self.SVM_ORB.predict(img_path)
 
 
 class App(QWidget):

@@ -59,29 +59,79 @@ def progress_bar(total, progress, category):
 
 class ImageClassifierModel(object):
 
-    def __init__(self, path=None):
+    def __init__(self, model=None, k=None):
 
+        self.n_clusters = k
+        self.model = model
+        self.cluster = None
         self.clf = None
         self.accuracy = None
-        if path:
-            self.load_model(path)
 
-    def create_and_fit(self, training_data, training_labels, c, kernel, gamma):
+    def save_cluster(self):
+
+        """
+        Save the K-Means for later Use
+        """
+
+        joblib.dump(self.cluster, "SVM/cluster-model/{}-{}.pkl".format(self.n_clusters, self.model))
+
+    def save_svm(self):
+
+        """
+        Save the SVM for later Use
+        """
+
+        joblib.dump(self.clf, "SVM/classification-model/{}-SVM-{}.pkl".format(self.n_clusters, self.model))
+
+    def load(self):
+
+        """
+        Load the K-Means and SVM model
+        """
+
+        self.cluster = joblib.load("SVM/cluster-model/{}-{}.pkl".format(self.n_clusters, self.model))
+        self.clf = joblib.load("SVM/classification-model/{}-SVM-{}.pkl".format(self.n_clusters, self.model))
+
+    def create_and_fit_cluster(self, training_data):
+
+        all_train_descriptors = np.array([desc for desc_list in training_data for desc in desc_list])
+
+        self.cluster = KMeans(self.n_clusters, n_jobs=-1)
+        self.cluster.fit(all_train_descriptors)
+
+    def get_img_bow_hist(self, training_data):
+
+        img_clustered_words = [self.cluster.predict(raw_words) for raw_words in training_data]
+        return np.array([np.bincount(clustered_words, minlength=self.n_clusters) for clustered_words in img_clustered_words])
+
+    def create_and_fit_svm(self, training_data, training_labels, c, kernel, gamma):
 
         """
         Create and fit the SVM
         """
+        X_train = self.get_img_bow_hist(training_data)
+        y_train = np.array(training_labels).transpose()
 
         self.clf = svm.SVC(c, kernel, gamma=gamma)
-        self.clf.fit(training_data, training_labels)
+        self.clf.fit(X_train, y_train)
+
+    def predict(self, img_path):
+
+        image_desc = extract(img_path, self.model, resize=(384, 512))[1]
+        X = self.get_img_bow_hist([image_desc])
+        y_pred = self.clf.predict(X)
+        return y_pred[0]
 
     def best_estimator(self, training_data, training_labels):
         # ["linear", "poly", "rbf", "sigmoid"]
         param_grid = {'kernel': ["rbf"],
                       'C': [1, 1e1, 1e2, 1e3, 5e3, 1e4, 5e4, 1e5],
                       'gamma': [1e-6, 5e-5, 1e-5, 5e-4, 1e-4, 5e-3, 1e-3, 1e-2, 5e-1]}
+
+        X_train = self.get_img_bow_hist(training_data)
+        y_train = np.array(training_labels).transpose()
         self.clf = GridSearchCV(svm.SVC(), param_grid, n_jobs=-1)
-        self.clf = self.clf.fit(training_data, training_labels)
+        self.clf = self.clf.fit(X_train, y_train)
         print(self.clf.best_estimator_)
 
     def predict_and_show(self, X, y, files_path, resize):
@@ -90,7 +140,11 @@ class ImageClassifierModel(object):
             class_prediction = self.clf.predict([x])
             self.show(img_path, class_prediction, category, resize)
 
-    def predict(self, X, y):
+    def predict_all(self, training_data, training_labels):
+
+        X = self.get_img_bow_hist(training_data)
+        y = np.array(training_labels).transpose()
+
         y_pred = self.clf.predict(X)
         self.accuracy = round(self.clf.score(X, y) * 100, 2)
         return y_pred
@@ -135,50 +189,3 @@ class ImageClassifierModel(object):
         fig.tight_layout()
         # fig.savefig("Figures/fig"+str(it)+".png")
         plt.show()
-
-    def get_classifier(self):
-
-        return self.clf
-
-    def save_model(self, path):
-
-        """
-        Save the SVM for later Use
-        """
-
-        joblib.dump(self.clf, path)
-
-    def load_model(self, path):
-
-        """
-        Load the SVM model
-        """
-
-        self.clf = joblib.load(path)
-
-
-class ClusterModel(object):
-
-    def __init__(self, path=None):
-        self.cluster = None
-        if path:
-            self.load_model(path)
-
-    def create_and_fit(self, training_data, n_clusters):
-        all_train_descriptors = [desc for desc_list in training_data for desc in desc_list]
-        all_train_descriptors = np.array(all_train_descriptors)
-
-        self.cluster = KMeans(n_clusters, n_jobs=-1)
-        self.cluster.fit(all_train_descriptors)
-
-    def get_img_clustered_words(self, training_data):
-        return [self.cluster.predict(raw_words) for raw_words in training_data]
-
-    def get_img_bow_hist(self, img_clustered_words, n_clusters):
-        return np.array([np.bincount(clustered_words, minlength=n_clusters) for clustered_words in img_clustered_words])
-
-    def save_model(self, path):
-        joblib.dump(self.cluster, path)
-
-    def load_model(self, path):
-        self.cluster = joblib.load(path)
