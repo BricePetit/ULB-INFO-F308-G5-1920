@@ -17,20 +17,19 @@ classifier = ImageClassifierModel(model, k)
 classifier.load()
 
 p = Parser("../dataset/")
-file_paths = p.files
 
-# dataset, labels, imgs_path = [], [], []
-# features_extraction(model, file_paths, dataset, labels, imgs_path, resize=DIMENSIONS)
+# dataset, labels, files_path = [], [], []
+# features_extraction(model, p.files, dataset, labels, files_path, DIMENSIONS)
 
 train = joblib.load("SIFT_FEATURES.pkl")
-dataset, labels, imgs_path = train[0], train[1], train[2]
+dataset, labels, files_path = train[0], train[1], train[2]
 
 print("Image dimensions : {} - k : {}".format(DIMENSIONS, k))
 
 for it in range(MAX_ITER):
     print("Iteration :", it + 1)
     training_data, testing_data, training_labels, testing_labels, training_imgPath, testing_imgPath = \
-        train_test_split(dataset, labels, imgs_path, test_size=0.2)
+        train_test_split(dataset, labels, files_path, test_size=0.2)
 
     print("SVM model processing ...")
     print("C : {} - Kernel : {} - Gamma : {}".format(C, KERNEL, GAMMA))

@@ -10,10 +10,9 @@ model = models[0]
 # ------------------------------------------------------------------------------
 classifier = ImageClassifierModel(model, k)
 p = Parser("../dataset/")
-file_paths = p.files
 
 dataset, labels, files_path = [], [], []
-features_extraction(model, file_paths, dataset, labels, files_path, resize=DIMENSIONS)
+features_extraction(model, p.files, dataset, labels, files_path, DIMENSIONS)
 
 print("Cluster model processing ...")
 

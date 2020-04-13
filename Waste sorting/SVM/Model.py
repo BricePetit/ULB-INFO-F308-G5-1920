@@ -30,11 +30,11 @@ def extract(image_name, model, resize):
 def features_extraction(model, files, data, labels, files_path, resize):
     print("The start of features extraction")
     for category in files:
-        files = files[category]
-        n = len(files)
+        category_files = files[category]
+        n = len(category_files)
         for i in range(n):
             progress_bar(n, i + 1, category)
-            file_name = files[i]
+            file_name = category_files[i]
             kp, desc = extract(file_name, model, resize)
             if len(kp) > 0:
                 data.append(desc)

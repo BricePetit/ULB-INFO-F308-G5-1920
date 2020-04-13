@@ -9,7 +9,7 @@ opencv3
 PyQt5
 
 ```shell
- conda install -c anaconda pyqt 
+  pip install PyQt5 
 ```
 QLed
 
