@@ -37,7 +37,7 @@ if __name__ == "__main__":
     model = get_pytorch_model()
     preprocess = transforms.Compose([transforms.Resize(256), transforms.ToTensor(),
     Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
-"""
+    """
     train_data = ImageFolder(root = "../dataset", transform=preprocess)
     # val_data = ImageFolder(root = "../dataset", transform=preprocess)
 
@@ -46,18 +46,18 @@ if __name__ == "__main__":
     train_loader = iter(data_loader)
 
     x,y = next(train_loader)
-"""
+    """
     # inférence avec images 
-    # img = Image.open("../dataset/Blanc/Blanc1.jpg")
-    # img = preprocess(img)
-    # img = torch.unsqueeze(img, 0)
+    img = Image.open("../dataset/Blanc/Blanc1.jpg")
+    img = preprocess(img)
+    img = torch.unsqueeze(img, 0)
 
-    # model = model.eval()
-    # probs = model(img)
-    # print(probs)
-    # values, index = torch.max(probs, 1)
+    model = model.eval()
+    probs = model(img)
+    print(probs)
+    values, index = torch.max(probs, 1)
     
-    # print(str(int(index.numpy())))
+    print(str(int(index.numpy())))
     
 
     # loader = transforms.Compose([transforms.Resize(256), transforms.ToTensor()])
