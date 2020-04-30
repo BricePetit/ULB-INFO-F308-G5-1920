@@ -24,7 +24,6 @@ def extract(image_name, model, resize):
 
         kp, desc = mdl.detectAndCompute(gray_image, None)
         return kp, desc
-    raise
 
 
 def features_extraction(model, files, data, labels, files_path, resize):

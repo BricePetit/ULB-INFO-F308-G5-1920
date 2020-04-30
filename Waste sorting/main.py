@@ -12,7 +12,7 @@ from keras.preprocessing import image
 
 class CNN:
     def __init__(self):
-        self.model = load_model("CNN Transfer Learning/Model.model")
+        self.model = load_model("./CNN Transfer Learning/Model.model")
         self.categories = ["Blanc", "Bleu", "Jaune", "Orange", "Verre"]
 
     def predict(self, img_path):
