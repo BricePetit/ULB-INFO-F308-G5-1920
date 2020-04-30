@@ -12,6 +12,7 @@ from sklearn.model_selection import GridSearchCV
 
 def extract(image_name, model, resize):
     gray_image = cv2.imread(image_name, 0)
+    print(image_name)
     if gray_image is not None:
         if model == "SIFT":
             mdl = cv2.xfeatures2d.SIFT_create()

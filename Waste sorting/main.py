@@ -170,7 +170,9 @@ class App(QWidget):
                 self.update_bins(self.CNN.predict(self.imagePath))
 
             else:
-                self.update_bins(self.SVM.predict(self.imagePath, self.featuresExtractionComboBox.currentText()))
+                path = self.imagePath.split("/")
+                path = "{}/{}/{}".format(path[-3], path[-2], path[-1])
+                self.update_bins(self.SVM.predict(path, self.featuresExtractionComboBox.currentText()))
         except:
             QMessageBox.about(self, "Warning", "The image couldn't successfully be read")
 
