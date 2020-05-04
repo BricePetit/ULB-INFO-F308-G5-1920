@@ -1,4 +1,4 @@
-2) Sujet
+﻿2) Sujet
 	Les déchets sont omniprésents dans une société de consommation.
 Le premier graphique montre une tendance claire, qui implique une augmentation de la
 quantité des déchets produits mondialement d’ici 2050. Pourtant, en consultant les
@@ -39,24 +39,27 @@ Ensuite trouver l'hyperplan separateur adequat et procéder à la classification
 ---------------------------------------------------
 
 7) SIFT et SURF
-	Deux méthodes ont été utilisée pour l’extraction des caractéristiques des images
- dans les SVM, c’est SURF et SIFT. Les deux méthodes partagent les mêmes étapes :
-1.	L’obtention de plusieurs versions de l’image à des échelles d’espace différentes
-2.	La détection des key points
-3.	L’attribution d’une orientation à chaque key point
-4.	La création des descripteurs pour chaque key point.
+
+Deux méthodes ont été utilisées pour l’extraction des caractéristiques des images
+dans les SVM, ce sont SURF et SIFT. Les deux méthodes partagent les mêmes étapes :
+1.	L’obtention de plusieurs versions de l’image à des échelles différentes
+2.	La détection des points-clés
+3.	L’attribution d’une orientation à chaque point-clé
+4.	La création des descripteurs pour chaque point-clé
 
 8) Regroupement des caractéristiques
-	Dès qu’on obtient tous les descripteurs de toutes les images on peut commencer à
- les regrouper via la méthode des K-means clustoring. Ainsi, on va obtenir K groupes,
-chacun représentant une caractéristique, c’est ce qu’on appelle codewords. Ensuite, le
- SVM sera entraîné sur ce codeword, au moyen des images étiquetées.
+
+Dès qu’on obtient tous les descripteurs de toutes les images on peut commencer à
+les regrouper via la méthode des K-means clustering. Ainsi, on va obtenir K groupes,
+chacun représentant une caractéristique, c’est ce qu’on appelle des mots de code. Ensuite, le
+SVM sera entraîné sur ces mots de codes, au moyen des images étiquetées.
 
 9) Modèle final
-	Ces deux schémas représentent les différentes étapes de la phase d’entrainement et
- des prédictions. Lors de l’étape d’entraînement, le K-Means Clustoring nous permet
- d’obtenir notre bag of words (c.à.d le codeword), qui est utilisée, par la suite, lors
- d’une classification.
+
+Ces deux schémas représentent les différentes étapes de la phase d’entrainement et
+de prédiction. Lors de l’étape d’entraînement, le K-Means Clustering nous permet
+d’obtenir notre bag of words (c.à.d les mots de code), qui est utilisé, par la suite, lors
+d’une classification.
 
 ------------------------------------------------------
 
