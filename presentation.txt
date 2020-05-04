@@ -80,14 +80,16 @@ chacun représentant une caractéristique, c’est ce qu’on appelle codewords.
 ----------------------------------------------------------
 
 13) Dispositif pour le printemps des sciences
-Le dispositif comporte 5 poubelles équipées d’un petit moteur électrique permettant de les
- ouvrir automatiquement. Ainsi, les 5 poubelles sont reliées à un Raspberry Pi, sur lequel
- est exporter le modèle CNN. L’ors de l’activation via un bouton, on prend une photo du
-déchet posé sur la table, puis après traitement de l’image, la poubelle correspondante
- s’ouvre pour que l’utilisateur puisse y jeter l’objet, se refermant après quelques
-secondes.
-Il est également possible de remplacer le bouton par un détecteur de mouvement pour
- automatiser entièrement le processus.
+Pour le dispositif du printemps des sciences, nous avons exporté le modèle CNN sur le RaspberryPi 4.
+Ce dispositif comporte 5 poubelles chacune équipées d’un petit moteur électrique permettant de les
+ouvrir automatiquement. Les moteurs sont reliés à un contrôleur qui est lui même relié au Raspberry Pi.
+Ce contrôleur permet de faciliter les interactions avec les moteurs. Le Raspberry Pi est équipée d'une caréma
+qui lors de la pression d'un bouton, prendra une photo du déchet posé sur la table.
+Une fois la photo prise, l'image est traitée par le CNN et en fonction du résultat, la poubelle adéquate s'ouvre
+pour que l’utilisateur puisse y jeter son déchet et se referme après quelques secondes.
+Bien entendu, notre modèle n'est pas fixé. Il peut facilement être adapté en fonction de l'environnement,
+des situations et de notre imagination. Par exemple, nous pouvons très bien remplacer le bouton par un capteur de distance qui
+permettrait d'avoir un modèle entièrement sans contact.
 
  ----------------------------------------------------------
 
