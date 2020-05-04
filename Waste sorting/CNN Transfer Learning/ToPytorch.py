@@ -209,7 +209,7 @@ if __name__ == "__main__":
         model.load_state_dict(best_model_wts)
         return model
 
-    def split(train_datagen, test_datagen, directory, test_split=0.2, fraction_dataset=1):
+    def split(directory, test_split=0.2, fraction_dataset=1):
         try:
             shutil.rmtree("datasets")
         except:
@@ -232,7 +232,6 @@ if __name__ == "__main__":
                 os.link(directory + "/" + sub_dir + "/" + i, "datasets/val/" + sub_dir + "/" + i)
 
             os.mkdir("datasets/train/" + sub_dir)
-
             for i in train_images:
                 os.link(directory + "/" + sub_dir + "/" + i, "datasets/train/" + sub_dir + "/" + i)
 
@@ -252,9 +251,8 @@ if __name__ == "__main__":
         }
         return data_transforms
 
-    data_dir = '../dataset'
-    data_transforms = split()
-    image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
+    data_transforms = split("../dataset")
+    image_datasets = {x: datasets.ImageFolder(os.path.join("datasets", x),
                                             data_transforms[x])
                     for x in ['train', 'val']}
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4,
@@ -283,3 +281,4 @@ if __name__ == "__main__":
 
     model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler,
                        num_epochs=25)
+    torch.save(model_ft.state_dict(), "modelPyTorch.pt")
