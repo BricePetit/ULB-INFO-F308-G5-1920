@@ -1,36 +1,40 @@
 2) Sujet
-	Les déchets sont omniprésents dans une société de consommation. 
-Le premier graphique montre une tendance claire, qui implique une augmentation de la 
-quantité des déchets produits mondialement d’ici 2050. Pourtant, en consultant les 
-statistiques d’un pays comme la France, on voit que seulement la moitié des habitants 
+	Les déchets sont omniprésents dans une société de consommation.
+Le premier graphique montre une tendance claire, qui implique une augmentation de la
+quantité des déchets produits mondialement d’ici 2050. Pourtant, en consultant les
+statistiques d’un pays comme la France, on voit que seulement la moitié des habitants
 tri de manière systématique leur déchets.
-	Ainsi, une automatisation du tri des déchets permettrait de recycler de manière 
-plus efficace et dans de plus grandes quantités. On parle également d’une baisse du coût 
+	Ainsi, une automatisation du tri des déchets permettrait de recycler de manière
+plus efficace et dans de plus grandes quantités. On parle également d’une baisse du coût
 du traitement.
 
 3) Les techniques utilisée
 Notre projet se focalise sur le principe de traitement d’image pour l’identification
  de la nature des déchets. Dans notre cas, le traitement d’image se résume à un problème
  de classification. Il existe de multiples méthodes pour résoudre ce genre de problèmes
- (k-Nearest Neighbor (KNN), méthodes probabilistes de Bayes, Decision Tree …) 
+ (k-Nearest Neighbor (KNN), méthodes probabilistes de Bayes, Decision Tree …)
 
 ----------------------------------------------------
 
-4)Celles qui deux d’entre
- elles ont été choisie dans le cadre de ce projet :
-- Convolutional Neural Network (CNN)
-- Support Vector Machine (SVM)
+Slide 4)
+Pour la classification des déchets, deux solutions de machine learning ont été
+explorées :
+	- SVM (Support Vector Machine) avec les techniques d'extraction de
+		caractéristiques (SIFT, SURF et ORB)
+	- CNN (Convolutional Neural Network) avec du transfer learning.
 
-5) Base de données
-	La base de données utilisée pour l’entraînement des différents modèles est composée
- d’environ 4000 images. Pour augmenter la qualité des prédiction, les objets analysé sont
- disposés sur fond blanc.
+Slide 5)
+Les modèles sont entraînés sur une base de données d’environ 4000 images, divisée
+en cinq catégories de déchets (sac blanc, bleu, jaune et orange, ainsi que le
+verre). Pour minimiser les perturbations liées à la reconnaissance d’images,
+les photos possèdent les mêmes dimensions et les objets sont exposés sur fond
+blanc.
 
-6) Les SVM
-	Les SVM peuvent être décomposés en deux étapes d’entraînement : 
-- l’extraction des caractéristiques des images (SIFT)
-- le regroupement des caractéristiques en classes (Hyperplan)
-Ensuite on procéder à la classification.
+Slide 6)
+Notre modele SVM est décomposé en deux grandes étapes:
+D'abord l’extraction des caractéristiques des images (SIFT,SURF,..)
+et le regroupement de ces caractéristiques en classes (K-means).
+Ensuite trouver l'hyperplan separateur adequat et procéder à la classification.
 
 ---------------------------------------------------
 
@@ -78,9 +82,30 @@ chacun représentant une caractéristique, c’est ce qu’on appelle codewords.
 13) Dispositif pour le printemps des sciences
 Le dispositif comporte 5 poubelles équipées d’un petit moteur électrique permettant de les
  ouvrir automatiquement. Ainsi, les 5 poubelles sont reliées à un Raspberry Pi, sur lequel
- est exporter le modèle CNN. L’ors de l’activation via un bouton, on prend une photo du 
+ est exporter le modèle CNN. L’ors de l’activation via un bouton, on prend une photo du
 déchet posé sur la table, puis après traitement de l’image, la poubelle correspondante
- s’ouvre pour que l’utilisateur puisse y jeter l’objet, se refermant après quelques 
+ s’ouvre pour que l’utilisateur puisse y jeter l’objet, se refermant après quelques
 secondes.
 Il est également possible de remplacer le bouton par un détecteur de mouvement pour
  automatiser entièrement le processus.
+
+ ----------------------------------------------------------
+
+ Logiciel)
+ 	Etant dans l'incapacité de présenter le dispositif de notre projet, comme il
+	aurait du l'être au printemps des sciences (les poubelles et le raspberry pi
+	ne se trouvent pas au même endroit) nous avons décider de créér une interface
+	graphique où nous pouvons visualiser les prédictions des différentes méthodes
+	expliquée auparavant c'est à dire le SVM avec les 3 méthodes d'extractions de
+	caractéristiques SIFT SURF ORB et le CNN.
+
+	Après avoir importé une image, nous pouvons choisir la méthode que nous
+	voulons et nous pouvons lancer la prédiction. Après la led se trouvant en
+	dessous de la poubelle correspondant à la prédiction s'allume.
+
+	Comme nous avons mis dans notre poster, nous obtenons une précision de
+		SVM :
+			SIFT: 62 %
+			SURF: 65 %
+			ORB: 58%
+		CNN: 90%
