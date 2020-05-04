@@ -1,0 +1,86 @@
+2) Sujet
+	Les déchets sont omniprésents dans une société de consommation. 
+Le premier graphique montre une tendance claire, qui implique une augmentation de la 
+quantité des déchets produits mondialement d’ici 2050. Pourtant, en consultant les 
+statistiques d’un pays comme la France, on voit que seulement la moitié des habitants 
+tri de manière systématique leur déchets.
+	Ainsi, une automatisation du tri des déchets permettrait de recycler de manière 
+plus efficace et dans de plus grandes quantités. On parle également d’une baisse du coût 
+du traitement.
+
+3) Les techniques utilisée
+Notre projet se focalise sur le principe de traitement d’image pour l’identification
+ de la nature des déchets. Dans notre cas, le traitement d’image se résume à un problème
+ de classification. Il existe de multiples méthodes pour résoudre ce genre de problèmes
+ (k-Nearest Neighbor (KNN), méthodes probabilistes de Bayes, Decision Tree …) 
+
+----------------------------------------------------
+
+4)Celles qui deux d’entre
+ elles ont été choisie dans le cadre de ce projet :
+- Convolutional Neural Network (CNN)
+- Support Vector Machine (SVM)
+
+5) Base de données
+	La base de données utilisée pour l’entraînement des différents modèles est composée
+ d’environ 4000 images. Pour augmenter la qualité des prédiction, les objets analysé sont
+ disposés sur fond blanc.
+
+6) Les SVM
+	Les SVM peuvent être décomposés en deux étapes d’entraînement : 
+- l’extraction des caractéristiques des images (SIFT)
+- le regroupement des caractéristiques en classes (Hyperplan)
+Ensuite on procéder à la classification.
+
+---------------------------------------------------
+
+7) SIFT et SURF
+	Deux méthodes ont été utilisée pour l’extraction des caractéristiques des images
+ dans les SVM, c’est SURF et SIFT. Les deux méthodes partagent les mêmes étapes :
+1.	L’obtention de plusieurs versions de l’image à des échelles d’espace différentes
+2.	La détection des key points
+3.	L’attribution d’une orientation à chaque key point
+4.	La création des descripteurs pour chaque key point.
+
+8) Regroupement des caractéristiques
+	Dès qu’on obtient tous les descripteurs de toutes les images on peut commencer à
+ les regrouper via la méthode des K-means clustoring. Ainsi, on va obtenir K groupes,
+chacun représentant une caractéristique, c’est ce qu’on appelle codewords. Ensuite, le
+ SVM sera entraîné sur ce codeword, au moyen des images étiquetées.
+
+9) Modèle final
+	Ces deux schémas représentent les différentes étapes de la phase d’entrainement et
+ des prédictions. Lors de l’étape d’entraînement, le K-Means Clustoring nous permet
+ d’obtenir notre bag of words (c.à.d le codeword), qui est utilisée, par la suite, lors
+ d’une classification.
+
+------------------------------------------------------
+
+10,11) Les (CNN)
+	Les CNN sont composés de deux parties :
+- L’extraction des caractéristiques, en deux opérations :
+-  couche de convolution qui va utiliser des filtres (montrer le slide suivant), qui sont
+ des petites matrices, qui vont mettre en évidence des caractéristiques spécifiques de
+ l’image (les bords ayant une direction spécifique, ou le changement de couleur).
+- couche de « pooling » où on réduit la taille de l’image.
+- L’étape de classification qui est un réseau de neurones artificiel, prenant en input
+ un vecteur de pixel résumant l’image et ayant comme output l’ensemble des classes.
+
+12) Le Transfer Learning
+	Comme la base de données est très petite, alors qu’un CNN demanderait des millions
+ d’images pour être performant, on utilise la méthode de transfert learning. Il s’agit de
+ prendre un modèle déjà entraîné et de le court-circuité au niveau de ses dernière couche
+ de convulsion, pour le réentraîner sur de nouvelles données et reconfigurer le réseau de
+ neurones pour le nouvel ensemble de classes.
+
+----------------------------------------------------------
+
+13) Dispositif pour le printemps des sciences
+Le dispositif comporte 5 poubelles équipées d’un petit moteur électrique permettant de les
+ ouvrir automatiquement. Ainsi, les 5 poubelles sont reliées à un Raspberry Pi, sur lequel
+ est exporter le modèle CNN. L’ors de l’activation via un bouton, on prend une photo du 
+déchet posé sur la table, puis après traitement de l’image, la poubelle correspondante
+ s’ouvre pour que l’utilisateur puisse y jeter l’objet, se refermant après quelques 
+secondes.
+Il est également possible de remplacer le bouton par un détecteur de mouvement pour
+ automatiser entièrement le processus.
