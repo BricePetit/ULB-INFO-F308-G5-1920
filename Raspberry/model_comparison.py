@@ -21,6 +21,7 @@ import numpy as np
 from keras.models import load_model
 from keras.preprocessing import image
 import torch
+from PIL import Image
 
 def predictKerasCNN(img_path):
     categories = ["Blanc", "Bleu", "Jaune", "Orange", "Verre"]
@@ -35,5 +36,12 @@ if __name__ == "__main__":
     # categories = ["Blanc", "Bleu", "Jaune", "Orange", "Verre"]
     # index = categories.index(res)
 
-    model_pytorch = torch.load("ModelPyTorch.pt")
+    device = torch.device('CPU')
+    model_pytorch = torch.load("ModelPyTorch.pt", map_location=device)
     model_pytorch.eval()
+    img = Image.open("dechet.jpg")
+    img = preprocess(img)
+    img = torch.unsqueeze(img, 0)
+    res = model_pytorch(img)
+    print(res)
+    value, index = torch.max(res, 1)
