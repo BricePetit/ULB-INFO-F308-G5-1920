@@ -1,5 +1,7 @@
 """
 les cables pour les moteurs, le cable brun est vers l'exterieur
+Script original pour l'utilisation du Raspberry Pi 4 avec le bouton, les poubelles avec les poubelles,
+le contrôleur des moteurs et la caméra
 """
 # Import pour le sleep
 import time
