@@ -127,7 +127,7 @@ if __name__ == "__main__":
     print("Temps de prédiction moyen pour une image : ", total/5)
     
     print("Précision pour la poubelle blanche : ", (correct_blanc/blanc) * 100, "%")
-    print("Précision pour la poubelle bleu : ", (correct_bleu/bleu) * 100, "%")
+    print("Précision pour la poubelle bleue : ", (correct_bleu/bleu) * 100, "%")
     print("Précision pour la poubelle jaune : ", (correct_jaune/jaune) * 100, "%")
     print("Précision pour la poubelle orange : ", (correct_orange/orange) * 100, "%")
     print("Précision pour le verre : ", (correct_verre/verre) * 100, "%")
