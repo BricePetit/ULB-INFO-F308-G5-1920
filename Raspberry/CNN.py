@@ -6,6 +6,7 @@ Tri des déchets, élémentaire, n'est-ce pas (v 2.0) ?
 Script pour le benchmark de Keras sur le Raspberry Pi 4
 
 Pour changer de backend sous keras, il faut changer "backend" dans $HOME/.keras/keras.json
+Sous windows, il faut remplacer $HOME par %USERPROFILE%
 {
     "image_data_format": "channels_last",
     "epsilon": 1e-07,
