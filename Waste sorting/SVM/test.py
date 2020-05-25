@@ -3,14 +3,12 @@ from Model import *
 from Parser import *
 from sklearn.model_selection import train_test_split
 # ------------------------------------------------------------------------------
-# DIMENSIONS = (HEIGHT, WIDTH)
-DIMENSIONS = (384, 512)
+# DIMENSIONS = (WIDTH, HEIGHT)
+DIMENSIONS = (512, 384)
 MAX_ITER = 1
 C, KERNEL, GAMMA, k = 1000, "rbf", 1e-6, 1000
 accuracy = []
-cluster_models = ["1000-SIFT.pkl", "1000-SURF.pkl", "1000-ORB.pkl"]
 models = ["SIFT", "SURF", "ORB"]
-features_models = ["SIFT_FEATURES.pkl", "SURF_FEATURES.pkl", "ORB_FEATURES.pkl"]
 model = models[0]
 # ------------------------------------------------------------------------------
 classifier = ImageClassifierModel(model, k)
@@ -18,11 +16,8 @@ classifier.load()
 
 p = Parser("../dataset/")
 
-# dataset, labels, files_path = [], [], []
-# features_extraction(model, p.files, dataset, labels, files_path, DIMENSIONS)
-
-train = joblib.load("SIFT_FEATURES.pkl")
-dataset, labels, files_path = train[0], train[1], train[2]
+dataset, labels, files_path = [], [], []
+features_extraction(model, p.files, dataset, labels, files_path, DIMENSIONS)
 
 print("Image dimensions : {} - k : {}".format(DIMENSIONS, k))
 

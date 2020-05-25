@@ -2,8 +2,8 @@ from Model import *
 from Parser import *
 from sklearn.model_selection import train_test_split
 # ------------------------------------------------------------------------------
-# DIMENSIONS = (HEIGHT, WIDTH)
-DIMENSIONS = (384, 512)
+# DIMENSIONS = (WIDTH, HEIGHT)
+DIMENSIONS = (512, 384)
 C, KERNEL, GAMMA, k = 1000, "rbf", 1e-6, 1000
 models = ["SIFT", "SURF", "ORB"]
 model = models[0]
@@ -25,6 +25,6 @@ training_data, testing_data, training_labels, testing_labels, training_imgPath, 
 
 print("SVM model processing ...")
 print("C : {} - Kernel : {} - Gamma : {}".format(C, KERNEL, GAMMA))
-classifier.create_and_fit(training_data, testing_data, C, KERNEL, GAMMA)
+classifier.create_and_fit_svm(training_data, training_labels, C, KERNEL, GAMMA)
 # classifier.best_estimator(training_data, testing_data)
 classifier.save_svm()
